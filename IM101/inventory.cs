@@ -96,6 +96,7 @@ namespace IM101
                     int prevStock = 0;
                     int newStock = 0;
 
+                    // Check if product exists or insert new product
                     using (SqlCommand cmd = new SqlCommand(selectProductQuery, connect))
                     {
                         cmd.Parameters.AddWithValue("@prodName", inventory_prodname.Text.Trim());
@@ -108,14 +109,13 @@ namespace IM101
                             }
                             else
                             {
-                                // Insert into Product table
+                                // Insert into Product table if product doesn't exist
                                 string insertProductQuery = @"
-                        INSERT INTO Product (ProductName, Price)
-                        OUTPUT INSERTED.ProductID
-                        VALUES (@prodName, @price)";
+                            INSERT INTO Product (ProductName, Price)
+                            OUTPUT INSERTED.ProductID
+                            VALUES (@prodName, @price)";
 
                                 reader.Close();
-
                                 using (SqlCommand insertProductCmd = new SqlCommand(insertProductQuery, connect))
                                 {
                                     insertProductCmd.Parameters.AddWithValue("@prodName", inventory_prodname.Text.Trim());
@@ -126,24 +126,16 @@ namespace IM101
                         }
                     }
 
-                    connect.Close();
-                    connect.Open();
-
-                    // Fetch the latest NewStock from Logs
-                    string getLastNewStockQuery = @"
-                SELECT TOP 1 NewStock 
-                FROM Logs 
-                WHERE ProductID = @prodID 
-                ORDER BY Date DESC";
-
-                    using (SqlCommand getLastNewStockCmd = new SqlCommand(getLastNewStockQuery, connect))
+                    // Fetch the current stock from the Inventory table
+                    string getCurrentStockQuery = "SELECT SUM(Stocks) FROM Inventory WHERE ProductID = @prodID";
+                    using (SqlCommand getCurrentStockCmd = new SqlCommand(getCurrentStockQuery, connect))
                     {
-                        getLastNewStockCmd.Parameters.AddWithValue("@prodID", productID);
-                        object lastNewStockResult = getLastNewStockCmd.ExecuteScalar();
-
-                        prevStock = lastNewStockResult != null ? Convert.ToInt32(lastNewStockResult) : 0;
+                        getCurrentStockCmd.Parameters.AddWithValue("@prodID", productID);
+                        object currentStockResult = getCurrentStockCmd.ExecuteScalar();
+                        prevStock = currentStockResult != DBNull.Value ? Convert.ToInt32(currentStockResult) : 0;
                     }
 
+                    // Calculate new stock after adjustment
                     int quantityChange = string.IsNullOrEmpty(inventory_stock.Text.Trim())
                         ? 0
                         : Convert.ToInt32(inventory_stock.Text.Trim());
@@ -200,6 +192,7 @@ namespace IM101
                 }
             }
         }
+
         public void clearFields()
         {
             inventory_prodID.Text = "";
@@ -295,7 +288,7 @@ namespace IM101
 
                         insertLogCmd.Parameters.AddWithValue("@actionType", "Inventory Removal");
                         insertLogCmd.Parameters.AddWithValue("@prodID", productID);
-                        insertLogCmd.Parameters.AddWithValue("@quantityChange", -quantityChange); // Negative for removal
+                        insertLogCmd.Parameters.AddWithValue("@quantityChange", -quantityChange); 
                         insertLogCmd.Parameters.AddWithValue("@prevStock", prevStock);
                         insertLogCmd.Parameters.AddWithValue("@newStock", newStock);
                         insertLogCmd.Parameters.AddWithValue("@staff", formattedStaffName);
@@ -342,104 +335,7 @@ namespace IM101
 
         private void inventory_upbtn_Click(object sender, EventArgs e)
         {
-            if (EmptyFields())
-            {
-                MessageBox.Show("Empty Fields", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            if (checkConnection())
-            {
-                try
-                {
-                    connect.Open();
-
-                    string selectProductQuery = @"
-                SELECT ProductID FROM Product 
-                WHERE ProductName = @prodName";
-
-                    int productID;
-
-                    using (SqlCommand cmd = new SqlCommand(selectProductQuery, connect))
-                    {
-                        cmd.Parameters.AddWithValue("@prodName", inventory_prodname.Text.Trim());
-                        object result = cmd.ExecuteScalar();
-
-                        if (result != null)
-                        {
-                            productID = (int)result;
-                        }
-                        else
-                        {
-                            string insertProductQuery = @"
-                        INSERT INTO Product (ProductName, Price)
-                        OUTPUT INSERTED.ProductID
-                        VALUES (@prodName, @price)";
-
-                            using (SqlCommand insertProductCmd = new SqlCommand(insertProductQuery, connect))
-                            {
-                                insertProductCmd.Parameters.AddWithValue("@prodName", inventory_prodname.Text.Trim());
-                                insertProductCmd.Parameters.AddWithValue("@price", inventory_price.Text.Trim());
-
-                                productID = (int)insertProductCmd.ExecuteScalar();
-                            }
-                        }
-                    }
-
-                    string inventoryCheckQuery = @"
-                SELECT COUNT(*) FROM Inventory 
-                WHERE ProductID = @prodID";
-
-                    using (SqlCommand checkCmd = new SqlCommand(inventoryCheckQuery, connect))
-                    {
-                        checkCmd.Parameters.AddWithValue("@prodID", productID);
-                        int inventoryCount = (int)checkCmd.ExecuteScalar();
-
-                        string inventoryQuery;
-
-                        if (inventoryCount > 0)
-                        {
-                            inventoryQuery = @"
-                        UPDATE Inventory
-                        SET Price = @price, 
-                            Stocks = @stocks, 
-                            Amount = @amount,
-                            Date = @date
-                        WHERE ProductID = @prodID";
-                        }
-                        else
-                        {
-                            inventoryQuery = @"
-                        INSERT INTO Inventory (ProductID, Price, Stocks, Amount, Date)
-                        VALUES (@prodID, @price, @stocks, @amount, @date)";
-                        }
-
-                        using (SqlCommand inventoryCmd = new SqlCommand(inventoryQuery, connect))
-                        {
-                            inventoryCmd.Parameters.AddWithValue("@prodID", productID);
-                            inventoryCmd.Parameters.AddWithValue("@price", inventory_price.Text.Trim());
-                            inventoryCmd.Parameters.AddWithValue("@stocks", string.IsNullOrEmpty(inventory_stock.Text.Trim()) ? (object)DBNull.Value : inventory_stock.Text.Trim());
-                            inventoryCmd.Parameters.AddWithValue("@amount", string.IsNullOrEmpty(inventory_am.Text.Trim()) ? (object)DBNull.Value : inventory_am.Text.Trim());
-                            DateTime today = DateTime.Today;
-                            inventoryCmd.Parameters.AddWithValue("@date", today);
-
-                            inventoryCmd.ExecuteNonQuery();
-                        }
-                    }
-
-
-                    clearFields();
-                    DisplayAllProducts();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Failed connection: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    connect.Close();
-                }
-            }
+            
         }
 
         private void inventory_Load(object sender, EventArgs e)

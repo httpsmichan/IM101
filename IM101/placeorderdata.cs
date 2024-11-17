@@ -13,7 +13,7 @@ namespace IM101
     {
         SqlConnection connect = new SqlConnection(@"Data Source=SHINE;Initial Catalog=FuntilonDatabase;Integrated Security=True;");
 
-        public string ProductID { get; set; }
+        public int ProductID { get; set; }
         public string ProductName { get; set; }
         public string OriginalPrice { get; set; }
         public int Quantity { get; set; }
@@ -61,7 +61,7 @@ namespace IM101
                         while (reader.Read())
                         {
                             placeorderdata pData = new placeorderdata();
-                            pData.ProductID = reader["ProductID"].ToString();
+                            pData.ProductID = Convert.ToInt32(reader["ProductID"]);
                             pData.ProductName = reader["ProductName"].ToString();
                             pData.OriginalPrice = reader["OriginalPrice"].ToString();
                             pData.Quantity = Convert.ToInt32(reader["Quantity"]);
@@ -128,7 +128,7 @@ namespace IM101
                             {
                                 placeorderdata pData = new placeorderdata
                                 {
-                                    ProductID = reader["ProductID"].ToString(),
+                                    ProductID = Convert.ToInt32(reader["ProductID"]),
                                     ProductName = reader["ProductName"].ToString(),
                                     OriginalPrice = reader["OriginalPrice"].ToString(),
                                     Quantity = Convert.ToInt32(reader["Quantity"]),

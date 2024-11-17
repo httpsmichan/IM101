@@ -15,7 +15,7 @@ namespace IM101
 
         public int PurchaseID { set; get; }
         public string CustomerID { set; get; }
-        public string ProductID { set; get; }
+        public int ProductID { set; get; }
         public string ProductName { set; get; }
         public string Category { set; get; }
         public string OriginalPrice { set; get; }
@@ -71,7 +71,7 @@ namespace IM101
                             ordersdata oData = new ordersdata();
                             oData.PurchaseID = (int)reader["PurchaseID"];
                             oData.CustomerID = reader["CustomerID"].ToString();
-                            oData.ProductID = reader["ProductID"].ToString();
+                            oData.ProductID = Convert.ToInt32(reader["ProductID"]);
                             oData.ProductName = reader["ProductName"].ToString();
                             oData.Category = reader["Category"].ToString();
                             oData.OriginalPrice = reader["OriginalPrice"].ToString();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -183,14 +184,12 @@ namespace IM101
                         float price = 0;
                         int productID = int.Parse(enterprodID.Text.Trim());
 
-                        // Query product details and earliest inventory row (based on Date)
+                        // Query product details
                         string selectData = @"
-                                                SELECT p.ProductName, p.Price, p.Category, i.Stocks, i.Amount, i.InventoryID, i.Date
-                                                FROM Product p
-                                                JOIN Inventory i ON p.ProductID = i.ProductID
-                                                WHERE p.ProductID = @prodID AND p.Status = @status
-                                                ORDER BY i.Date ASC
-                                                ";
+                                    SELECT p.ProductName, p.Price, p.Category, i.Stocks, i.Amount
+                                    FROM Product p
+                                    JOIN Inventory i ON p.ProductID = i.ProductID
+                                    WHERE p.ProductID = @prodID AND p.Status = @status";
 
                         using (SqlCommand cmd = new SqlCommand(selectData, connect))
                         {
@@ -223,7 +222,7 @@ namespace IM101
 
                             // Insert data into Purchase table
                             string insertData = @"INSERT INTO Purchase (CustomerID, ProductID, ProductName, Category, Quantity, Unit, OriginalPrice, Subtotal, OrderDate) 
-                                  VALUES (@catID, @prodID, @prodName, @category, @qty, @unit, @price, @subtotal, @orderDate)";
+                          VALUES (@catID, @prodID, @prodName, @category, @qty, @unit, @price, @subtotal, @orderDate)";
 
                             using (SqlCommand insertCmd = new SqlCommand(insertData, connect))
                             {
@@ -238,24 +237,6 @@ namespace IM101
                                 insertCmd.Parameters.AddWithValue("@orderDate", today);
 
                                 insertCmd.ExecuteNonQuery();
-                            }
-
-                            // Deduct stock from the first inventory row (based on Date)
-                            string updateStock = @"
-                                                    UPDATE Inventory
-                                                    SET Stocks = Stocks - @qty
-                                                    WHERE InventoryID = (
-                                                        SELECT TOP 1 InventoryID
-                                                        FROM Inventory
-                                                        WHERE ProductID = @prodID
-                                                        ORDER BY Date ASC
-                                                    )";
-
-                            using (SqlCommand updateCmd = new SqlCommand(updateStock, connect))
-                            {
-                                updateCmd.Parameters.AddWithValue("@qty", quantity);
-                                updateCmd.Parameters.AddWithValue("@prodID", productID);
-                                updateCmd.ExecuteNonQuery();
                             }
                         }
                     }
@@ -433,9 +414,14 @@ namespace IM101
                         try
                         {
                             connect.Open();
-                            string selectData = $"SELECT p.ProductName, p.Price, i.Stocks FROM Product p " +
-                                                "JOIN Inventory i ON p.ProductID = i.ProductID " +
-                                                "WHERE p.ProductID = @enteredValue AND p.Status = @status";
+
+                            // Query to get product details and available stock (without updating)
+                            string selectData = @"
+                    SELECT p.ProductName, p.Price, i.InventoryID, i.Stocks 
+                    FROM Product p 
+                    JOIN Inventory i ON p.ProductID = i.ProductID 
+                    WHERE p.ProductID = @enteredValue AND p.Status = @status
+                    ORDER BY i.InventoryID ASC"; // Ensures the stocks are processed in ascending order of InventoryID
 
                             using (SqlCommand cmd = new SqlCommand(selectData, connect))
                             {
@@ -444,15 +430,29 @@ namespace IM101
 
                                 using (SqlDataReader reader = cmd.ExecuteReader())
                                 {
-                                    if (reader.Read())
+                                    if (reader.HasRows)
                                     {
-                                        string prodName = reader["ProductName"].ToString();
-                                        float prodPrice = Convert.ToSingle(reader["Price"]);
-                                        int remStock = Convert.ToInt32(reader["Stocks"]);
+                                        string prodName = "";
+                                        float prodPrice = 0;
+                                        int totalStock = 0;
 
+                                        // Loop through the rows, fetching product details and stock information
+                                        while (reader.Read())
+                                        {
+                                            if (prodName == "") // Fetch product details only once
+                                            {
+                                                prodName = reader["ProductName"].ToString();
+                                                prodPrice = Convert.ToSingle(reader["Price"]);
+                                            }
+
+                                            // Accumulate the total stock from all inventory rows
+                                            totalStock += Convert.ToInt32(reader["Stocks"]);
+                                        }
+
+                                        // Now that we have all product and inventory data, display the information
                                         order_prodName.Text = prodName;
                                         order_price.Text = prodPrice.ToString("0.00");
-                                        order_Remstock.Text = remStock.ToString();
+                                        order_Remstock.Text = totalStock.ToString(); // Show total stock available
                                     }
                                     else
                                     {
@@ -476,8 +476,9 @@ namespace IM101
                     }
                 }
 
-                e.SuppressKeyPress = true;
+                e.SuppressKeyPress = true; 
             }
+
         }
 
         private void enterQty_KeyDown(object sender, KeyEventArgs e)
@@ -486,66 +487,58 @@ namespace IM101
             {
                 e.SuppressKeyPress = true;
 
-                IDGenerator();
+                IDGenerator(); // Ensure ID is generated
 
                 if (string.IsNullOrEmpty(enterQty.Text) || string.IsNullOrEmpty(enterprodID.Text))
                 {
                     Console.WriteLine("Select item first");
+                    return;
                 }
-                else
+
+                if (!checkConnection()) return;
+
+                try
                 {
-                    if (checkConnection())
+                    connect.Open();
+
+                    // Query to fetch product info
+                    string query = @"
+                SELECT p.ProductName, p.Price, p.Category, i.InventoryID, i.Stocks, i.Amount, i.Date, l.NewStock
+                FROM Product p
+                JOIN Inventory i ON p.ProductID = i.ProductID
+                LEFT JOIN Logs l ON p.ProductID = l.ProductID
+                WHERE p.ProductID = @prodID AND p.Status = @status
+                ORDER BY i.Date ASC";
+
+                    using (var cmd = new SqlCommand(query, connect))
                     {
-                        try
+                        cmd.Parameters.AddWithValue("@prodID", enterprodID.Text.Trim());
+                        cmd.Parameters.AddWithValue("@status", "Available");
+
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            connect.Open();
-
-                            int availableStock = 0;
-                            string prodName = "";
-                            string category = "";
-                            string unit = "";
-                            float price = 0;
-
-                            string selectData = @"
-                                                    SELECT p.ProductName, p.Price, p.Category, i.InventoryID, i.Stocks, i.Amount, i.Date
-                                                    FROM Product p 
-                                                    JOIN Inventory i ON p.ProductID = i.ProductID 
-                                                    WHERE p.ProductID = @prodID AND p.Status = @status
-                                                    ORDER BY i.Date ASC";
-
-                            using (SqlCommand cmd = new SqlCommand(selectData, connect))
+                            if (reader.Read())
                             {
-                                cmd.Parameters.AddWithValue("@prodID", enterprodID.Text.Trim());
-                                cmd.Parameters.AddWithValue("@status", "Available");
+                                string prodName = reader["ProductName"].ToString();
+                                string category = reader["Category"].ToString();
+                                string unit = reader["Amount"].ToString();
+                                float price = Convert.ToSingle(reader["Price"]);
+                                int availableStock = Convert.ToInt32(reader["NewStock"] ?? reader["NewStock"]);
 
-                                using (SqlDataReader reader = cmd.ExecuteReader())
+                                int qty = int.TryParse(enterQty.Text, out int quantity) ? quantity : 0;
+
+                                if (quantity > availableStock)
                                 {
-                                    if (reader.Read())
-                                    {
-                                        prodName = reader["ProductName"].ToString();
-                                        price = Convert.ToSingle(reader["Price"]);
-                                        category = reader["Category"].ToString();
-                                        unit = reader["Amount"].ToString();
-                                        availableStock = Convert.ToInt32(reader["Stocks"]);
-                                    }
+                                    MessageBox.Show("Order quantity exceeds available stock.", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    return;
                                 }
-                            }
 
-                            int quantity = int.TryParse(enterQty.Text, out int qty) ? qty : 0;
+                                // Insert purchase
+                                string insertPurchase = @"
+                            INSERT INTO Purchase (CustomerID, ProductID, ProductName, Category, Quantity, Unit, OriginalPrice, Subtotal, OrderDate)
+                            VALUES (@catID, @prodID, @prodName, @category, @qty, @unit, @price, @subtotal, @orderDate)";
 
-                            if (quantity > availableStock)
-                            {
-                                MessageBox.Show("Order quantity exceeds available stock.", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            }
-                            else
-                            {
-                                float subtotal = price * quantity;
-                                DateTime today = DateTime.Today;
-
-                                string insertData = @"INSERT INTO Purchase (CustomerID, ProductID, ProductName, Category, Quantity, Unit, OriginalPrice, Subtotal, OrderDate) 
-                                          VALUES (@catID, @prodID, @prodName, @category, @qty, @unit, @price, @subtotal, @orderDate)";
-
-                                using (SqlCommand insertCmd = new SqlCommand(insertData, connect))
+                                using (var insertCmd = new SqlCommand(insertPurchase, connect))
                                 {
                                     insertCmd.Parameters.AddWithValue("@catID", idGen);
                                     insertCmd.Parameters.AddWithValue("@prodID", enterprodID.Text.Trim());
@@ -554,21 +547,18 @@ namespace IM101
                                     insertCmd.Parameters.AddWithValue("@qty", quantity);
                                     insertCmd.Parameters.AddWithValue("@unit", unit);
                                     insertCmd.Parameters.AddWithValue("@price", price);
-                                    insertCmd.Parameters.AddWithValue("@subtotal", subtotal);
-                                    insertCmd.Parameters.AddWithValue("@orderDate", today);
-
+                                    insertCmd.Parameters.AddWithValue("@subtotal", price * quantity);
+                                    insertCmd.Parameters.AddWithValue("@orderDate", DateTime.Today);
                                     insertCmd.ExecuteNonQuery();
                                 }
 
+                                // Update stock in the inventory
                                 string updateStock = @"
-                                                        UPDATE Inventory 
-                                                        SET Stocks = Stocks - @qty 
-                                                        WHERE InventoryID = (SELECT TOP 1 InventoryID 
-                                                                              FROM Inventory 
-                                                                              WHERE ProductID = @prodID 
-                                                                              ORDER BY Date ASC)";
+                            UPDATE Logs 
+                            SET NewStock = NewStock - @qty 
+                            WHERE LogID = (SELECT TOP 1 LogID FROM Logs WHERE ProductID = @prodID ORDER BY Date ASC)";
 
-                                using (SqlCommand updateCmd = new SqlCommand(updateStock, connect))
+                                using (var updateCmd = new SqlCommand(updateStock, connect))
                                 {
                                     updateCmd.Parameters.AddWithValue("@qty", quantity);
                                     updateCmd.Parameters.AddWithValue("@prodID", enterprodID.Text.Trim());
@@ -576,20 +566,32 @@ namespace IM101
                                 }
                             }
                         }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show("Connection failed: " + ex, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                        finally
-                        {
-                            connect.Close();
-                        }
                     }
-
-                    displayOrders();
-                    displayTotalPrice();
                 }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    connect.Close();
+                }
+
+                displayOrders(); // Refresh order display
+                displayTotalPrice(); // Update total price display
             }
+
+
+        }
+
+        private void enterprodID_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void order_Remstock_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
