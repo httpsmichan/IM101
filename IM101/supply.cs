@@ -97,6 +97,8 @@ namespace IM101
                 return false;
             }
         }
+    
+
 
         private void supply_addbtn_Click(object sender, EventArgs e)
         {
@@ -110,13 +112,16 @@ namespace IM101
 
             try
             {
+                // Ensure the connection is open before starting any SQL commands
+                if (connect.State != ConnectionState.Open)
+                {
+                    connect.Open();  // Open connection if it's not already open
+                    MessageBox.Show("Connection is open.");
+                }
+
+                // Check if product exists in Product table
                 using (SqlCommand checkCommand = new SqlCommand(checkProductQuery, connect))
                 {
-                    if (checkConnection())
-                    {
-                        connect.Open();
-                    }
-
                     checkCommand.Parameters.AddWithValue("@ProductID", supply_prodID.Text);
                     int productExists = (int)checkCommand.ExecuteScalar();
 
@@ -127,6 +132,36 @@ namespace IM101
                     }
                 }
 
+                // Retrieve ProductName and UnitCost (Price) from Supply table
+                string getProductDetailsQuery = "SELECT ProductName, UnitCost FROM Supply WHERE ProductID = @ProductID";
+                string productName = string.Empty;
+                double unitCost = 0;
+
+                using (SqlCommand getProductDetailsCommand = new SqlCommand(getProductDetailsQuery, connect))
+                {
+                    getProductDetailsCommand.Parameters.AddWithValue("@ProductID", supply_prodID.Text);
+                    using (SqlDataReader reader = getProductDetailsCommand.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            productName = reader["ProductName"].ToString();
+                            unitCost = Convert.ToDouble(reader["UnitCost"]);
+                        }
+                    }
+                }
+
+                // Log the inventory update before inserting into Inventory
+                if (supply_status.SelectedItem.ToString() == "Received")
+                {
+                    InsertLogEntry(connect, supply_prodID.Text, supply_qtys.Text, "Supply Received");
+                }
+                else
+                {
+                    MessageBox.Show("The status is not 'Received'. Current value: " + supply_status.SelectedItem.ToString());
+                    return; // Exit early if the status isn't 'Received'
+                }
+
+                // Insert supply data into the Supply table
                 string insertQuery = "INSERT INTO Supply (ProductID, ProductName, QtySupplied, UnitCost, TotalCost, SupplierID, Status, SupplyDate) " +
                                      "VALUES (@ProductID, @ProductName, @Quantity, @UnitCost, @TotalCost, @SupplierID, @Status, @Date)";
 
@@ -141,21 +176,17 @@ namespace IM101
                     command.Parameters.AddWithValue("@Status", supply_status.SelectedItem == null ? (object)DBNull.Value : supply_status.SelectedItem.ToString());
                     command.Parameters.AddWithValue("@Date", DateTime.Today);
 
-                    command.ExecuteNonQuery();
+                    command.ExecuteNonQuery(); // Execute the insert query for Supply
                 }
 
-                if (supply_status.SelectedItem.ToString() == "Received")
+                // Ensure connection is open for Inventory insert
+                if (connect.State != ConnectionState.Open)
                 {
-                    string updateInventoryQuery = "UPDATE Inventory SET Stocks = Stocks + @Quantity WHERE ProductID = @ProductID";
-
-                    using (SqlCommand inventoryCommand = new SqlCommand(updateInventoryQuery, connect))
-                    {
-                        inventoryCommand.Parameters.AddWithValue("@Quantity", supply_qtys.Text);
-                        inventoryCommand.Parameters.AddWithValue("@ProductID", supply_prodID.Text);
-
-                        inventoryCommand.ExecuteNonQuery();
-                    }
+                    connect.Open();  // Explicitly open the connection for Inventory insert
                 }
+
+                // Call the InsertInventory method to insert into Inventory table
+                InsertInventory(connect, supply_prodID.Text, productName, unitCost, supply_qtys.Text);
 
                 MessageBox.Show("Supply data added successfully!");
                 clearFields();
@@ -166,12 +197,137 @@ namespace IM101
             }
             finally
             {
+                // Ensure that the connection is closed at the end of the process.
                 if (connect.State == ConnectionState.Open)
                 {
-                    connect.Close();
+                    connect.Close(); // Close the connection after all operations
+                    MessageBox.Show("Connection closed.");
                 }
 
-                DisplayAllSupplies();
+                DisplayAllSupplies(); // Refresh UI or data view
+            }
+        }
+
+        private void InsertInventory(SqlConnection connection, string productID, string productName, double unitCost, string quantitySupplied)
+        {
+            try
+            {
+                // Ensure the connection is open before starting any query
+                if (connection.State != ConnectionState.Open)
+                {
+                    connection.Open(); // Open connection explicitly before the query
+                }
+
+                // Fetch the Price from the Inventory table for the given ProductID
+                double price = 0;
+
+                string getPriceQuery = "SELECT Price FROM Inventory WHERE ProductID = @ProductID";
+                using (SqlCommand getPriceCommand = new SqlCommand(getPriceQuery, connection))
+                {
+                    getPriceCommand.Parameters.AddWithValue("@ProductID", productID);
+                    object priceResult = getPriceCommand.ExecuteScalar(); // Fetch price from Inventory table
+
+                    if (priceResult != null && priceResult != DBNull.Value)
+                    {
+                        price = Convert.ToDouble(priceResult);
+                    }
+                    else
+                    {
+                        // If no price is found, use the provided unitCost (or handle the error appropriately)
+                        price = unitCost; // Default to provided unitCost if not found
+                    }
+                }
+
+                // Insert supply data into the Inventory table with the fetched or provided Price
+                string insertInventoryQuery = "INSERT INTO Inventory (ProductID, ProductName, Price, Stocks, Amount, Date) " +
+                                               "VALUES (@ProductID, @ProductName, @Price, @Stocks, @Amount, @Date)";
+
+                using (SqlCommand inventoryCommand = new SqlCommand(insertInventoryQuery, connection))
+                {
+                    inventoryCommand.Parameters.AddWithValue("@ProductID", productID);
+                    inventoryCommand.Parameters.AddWithValue("@ProductName", productName);
+                    inventoryCommand.Parameters.AddWithValue("@Price", price); // Use the fetched price
+                    inventoryCommand.Parameters.AddWithValue("@Stocks", quantitySupplied);
+                    inventoryCommand.Parameters.AddWithValue("@Amount", "pcs");
+                    inventoryCommand.Parameters.AddWithValue("@Date", DateTime.Today);
+
+                    inventoryCommand.ExecuteNonQuery(); // Execute inventory insert
+                }
+
+                Console.WriteLine("Inventory data inserted successfully!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error inserting inventory: " + ex.Message);
+            }
+        }
+
+
+        private void InsertLogEntry(SqlConnection connection, string productID, string quantitySupplied, string actionType)
+        {
+            try
+            {
+                // Ensure the connection is open before starting any query
+                if (connection.State != ConnectionState.Open)
+                {
+                    connection.Open(); // Explicitly open the connection if it's not already open
+                }
+
+                // Get current stock for the product (PrevStock)
+                int prevStock = GetCurrentStock(connection, Convert.ToInt32(productID));
+
+                // Calculate the new stock after the supply is added (NewStock)
+                int newStock = prevStock + Convert.ToInt32(quantitySupplied);
+
+                // Fetch the price from the Inventory table (based on ProductID)
+                double price = 0;
+                string getPriceQuery = "SELECT Price FROM Inventory WHERE ProductID = @ProductID";
+
+                using (SqlCommand priceCommand = new SqlCommand(getPriceQuery, connection))
+                {
+                    priceCommand.Parameters.AddWithValue("@ProductID", productID);
+                    object result = priceCommand.ExecuteScalar();
+                    if (result != DBNull.Value && result != null)
+                    {
+                        price = Convert.ToDouble(result);
+                    }
+                }
+
+                // Insert the log with correct values for PrevStock and NewStock
+                string insertLogQuery = "INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Price, Date) " +
+                                        "VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @price, @date)";
+
+                using (var cmdLog = new SqlCommand(insertLogQuery, connection))
+                {
+                    string username = Form1.username.Substring(0, 1).ToUpper() + Form1.username.Substring(1).ToLower();
+
+                    // Set the log parameters
+                    cmdLog.Parameters.AddWithValue("@actionType", actionType); // Action type (e.g., "Supply Received")
+                    cmdLog.Parameters.AddWithValue("@prodID", productID); // Product ID
+                    cmdLog.Parameters.AddWithValue("@quantityChange", quantitySupplied); // Quantity supplied (change in stock)
+                    cmdLog.Parameters.AddWithValue("@prevStock", prevStock); // Stock before the supply (PrevStock)
+                    cmdLog.Parameters.AddWithValue("@newStock", newStock); // Stock after the supply (NewStock)
+                    cmdLog.Parameters.AddWithValue("@staff", "@" + username); // Staff handling the update
+                    cmdLog.Parameters.AddWithValue("@price", price); // Price fetched from the Inventory table
+                    cmdLog.Parameters.AddWithValue("@date", DateTime.Now); // Date of the action
+
+                    cmdLog.ExecuteNonQuery(); // Execute the command to insert the log
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error inserting log: " + ex.Message);
+            }
+        }
+
+        private int GetCurrentStock(SqlConnection connection, int productID)
+        {
+            string query = "SELECT SUM(Stocks) FROM Inventory WHERE ProductID = @prodID GROUP BY ProductID";
+            using (var cmd = new SqlCommand(query, connection))
+            {
+                cmd.Parameters.AddWithValue("@prodID", productID);
+                var result = cmd.ExecuteScalar();
+                return result != DBNull.Value ? Convert.ToInt32(result) : 0;
             }
         }
 
@@ -393,6 +549,41 @@ namespace IM101
             {
                 supply_search.Text = "";
                 supply_search.ForeColor = Color.Black;
+            }
+        }
+
+        private void supply_totalcost_TextChanged(object sender, EventArgs e)
+        {
+            supply_totalcost.ReadOnly = true;
+        }
+
+        private void supply_unitcost_KeyDown(object sender, KeyEventArgs e)
+        {
+            
+            double supply_qty = 0;
+            TextBox supply_qtyTextBox = supply_qtys; 
+            if (double.TryParse(supply_qtyTextBox.Text, out supply_qty)) 
+            {
+                
+                double supply_unitcost1 = 0;
+                TextBox supply_unitcostTextBox = supply_unitcost; 
+                if (double.TryParse(supply_unitcostTextBox.Text, out supply_unitcost1)) 
+                {
+                    double total_cost = supply_qty * supply_unitcost1;
+
+                    TextBox total_costTextBox = supply_totalcost; 
+                    total_costTextBox.Text = total_cost.ToString("F2"); 
+                }
+                else
+                {
+                    TextBox total_costTextBox = supply_totalcost; 
+                    total_costTextBox.Text = "Invalid input";
+                }
+            }
+            else
+            {
+                TextBox total_costTextBox = supply_totalcost; 
+                total_costTextBox.Text = "Invalid input";
             }
         }
     }

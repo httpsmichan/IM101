@@ -302,15 +302,6 @@ namespace IM101
                             deleteCmd.ExecuteNonQuery();
                         }
 
-                        string updateStockQuery = "UPDATE Inventory SET Stocks = Stocks + @qty WHERE ProductID = @prodID";
-
-                        using (SqlCommand updateCmd = new SqlCommand(updateStockQuery, connect))
-                        {
-                            updateCmd.Parameters.AddWithValue("@qty", qtyToRemove);
-                            updateCmd.Parameters.AddWithValue("@prodID", productID);
-                            updateCmd.ExecuteNonQuery();
-                        }
-
                         displayOrders();
                         displayTotalPrice();
                     }
@@ -403,6 +394,8 @@ namespace IM101
 
         private void enterprodID_KeyDown(object sender, KeyEventArgs e)
         {
+            IDGenerator();
+
             if (e.KeyCode == Keys.Enter)
             {
                 string enteredValue = enterprodID.Text.Trim();
@@ -483,107 +476,101 @@ namespace IM101
 
         private void enterQty_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
+            if (e.KeyCode == Keys.Enter)  
             {
-                e.SuppressKeyPress = true;
-
-                IDGenerator(); // Ensure ID is generated
+                IDGenerator();
 
                 if (string.IsNullOrEmpty(enterQty.Text) || string.IsNullOrEmpty(enterprodID.Text))
                 {
                     Console.WriteLine("Select item first");
-                    return;
                 }
-
-                if (!checkConnection()) return;
-
-                try
+                else
                 {
-                    connect.Open();
-
-                    // Query to fetch product info
-                    string query = @"
-                SELECT p.ProductName, p.Price, p.Category, i.InventoryID, i.Stocks, i.Amount, i.Date, l.NewStock
-                FROM Product p
-                JOIN Inventory i ON p.ProductID = i.ProductID
-                LEFT JOIN Logs l ON p.ProductID = l.ProductID
-                WHERE p.ProductID = @prodID AND p.Status = @status
-                ORDER BY i.Date ASC";
-
-                    using (var cmd = new SqlCommand(query, connect))
+                    if (checkConnection())
                     {
-                        cmd.Parameters.AddWithValue("@prodID", enterprodID.Text.Trim());
-                        cmd.Parameters.AddWithValue("@status", "Available");
-
-                        using (var reader = cmd.ExecuteReader())
+                        try
                         {
-                            if (reader.Read())
+                            connect.Open();
+
+                            int availableStock = 0;
+                            string prodName = "";
+                            string category = "";
+                            string unit = "";
+                            float price = 0;
+                            int productID = int.Parse(enterprodID.Text.Trim());
+
+                            // Query product details
+                            string selectData = @"
+                                SELECT p.ProductName, p.Price, p.Category, i.Stocks, i.Amount
+                                FROM Product p
+                                JOIN Inventory i ON p.ProductID = i.ProductID
+                                WHERE p.ProductID = @prodID AND p.Status = @status";
+
+                            using (SqlCommand cmd = new SqlCommand(selectData, connect))
                             {
-                                string prodName = reader["ProductName"].ToString();
-                                string category = reader["Category"].ToString();
-                                string unit = reader["Amount"].ToString();
-                                float price = Convert.ToSingle(reader["Price"]);
-                                int availableStock = Convert.ToInt32(reader["NewStock"] ?? reader["NewStock"]);
+                                cmd.Parameters.AddWithValue("@prodID", productID);
+                                cmd.Parameters.AddWithValue("@status", "Available");
 
-                                int qty = int.TryParse(enterQty.Text, out int quantity) ? quantity : 0;
-
-                                if (quantity > availableStock)
+                                using (SqlDataReader reader = cmd.ExecuteReader())
                                 {
-                                    MessageBox.Show("Order quantity exceeds available stock.", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                    return;
+                                    if (reader.Read())
+                                    {
+                                        prodName = reader["ProductName"].ToString();
+                                        price = Convert.ToSingle(reader["Price"]);
+                                        category = reader["Category"].ToString();
+                                        unit = reader["Amount"].ToString();
+                                        availableStock = Convert.ToInt32(reader["Stocks"]);
+                                    }
                                 }
+                            }
 
-                                // Insert purchase
-                                string insertPurchase = @"
-                            INSERT INTO Purchase (CustomerID, ProductID, ProductName, Category, Quantity, Unit, OriginalPrice, Subtotal, OrderDate)
-                            VALUES (@catID, @prodID, @prodName, @category, @qty, @unit, @price, @subtotal, @orderDate)";
+                            int quantity = int.TryParse(enterQty.Text, out int qty) ? qty : 0;
 
-                                using (var insertCmd = new SqlCommand(insertPurchase, connect))
+                            if (quantity > availableStock)
+                            {
+                                MessageBox.Show("Order quantity exceeds available stock.", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                            else
+                            {
+                                float subtotal = price * quantity;
+                                DateTime today = DateTime.Today;
+
+                                // Insert data into Purchase table
+                                string insertData = @"INSERT INTO Purchase (CustomerID, ProductID, ProductName, Category, Quantity, Unit, OriginalPrice, Subtotal, OrderDate) 
+                        VALUES (@catID, @prodID, @prodName, @category, @qty, @unit, @price, @subtotal, @orderDate)";
+
+                                using (SqlCommand insertCmd = new SqlCommand(insertData, connect))
                                 {
                                     insertCmd.Parameters.AddWithValue("@catID", idGen);
-                                    insertCmd.Parameters.AddWithValue("@prodID", enterprodID.Text.Trim());
+                                    insertCmd.Parameters.AddWithValue("@prodID", productID);
                                     insertCmd.Parameters.AddWithValue("@prodName", prodName);
                                     insertCmd.Parameters.AddWithValue("@category", category);
                                     insertCmd.Parameters.AddWithValue("@qty", quantity);
                                     insertCmd.Parameters.AddWithValue("@unit", unit);
                                     insertCmd.Parameters.AddWithValue("@price", price);
-                                    insertCmd.Parameters.AddWithValue("@subtotal", price * quantity);
-                                    insertCmd.Parameters.AddWithValue("@orderDate", DateTime.Today);
+                                    insertCmd.Parameters.AddWithValue("@subtotal", subtotal);
+                                    insertCmd.Parameters.AddWithValue("@orderDate", today);
+
                                     insertCmd.ExecuteNonQuery();
-                                }
-
-                                // Update stock in the inventory
-                                string updateStock = @"
-                            UPDATE Logs 
-                            SET NewStock = NewStock - @qty 
-                            WHERE LogID = (SELECT TOP 1 LogID FROM Logs WHERE ProductID = @prodID ORDER BY Date ASC)";
-
-                                using (var updateCmd = new SqlCommand(updateStock, connect))
-                                {
-                                    updateCmd.Parameters.AddWithValue("@qty", quantity);
-                                    updateCmd.Parameters.AddWithValue("@prodID", enterprodID.Text.Trim());
-                                    updateCmd.ExecuteNonQuery();
                                 }
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show("Connection failed: " + ex, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        finally
+                        {
+                            connect.Close();
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Error: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    connect.Close();
-                }
 
-                displayOrders(); // Refresh order display
-                displayTotalPrice(); // Update total price display
+                    displayOrders();
+                    displayTotalPrice();
+                }
             }
-
-
         }
-
+      
         private void enterprodID_TextChanged(object sender, EventArgs e)
         {
 

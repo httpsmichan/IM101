@@ -43,115 +43,108 @@ namespace IM101
 
         private void supplier_addbtn_Click(object sender, EventArgs e)
         {
-            if (supplier_name.Text == "" || supplier_email.Text == "")
+            if (AreFieldsEmpty())
             {
-                MessageBox.Show("Empty fields", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ShowError("Empty fields");
             }
             else
             {
-                if (checkConnection())
-                {
-                    try
-                    {
-                        connect.Open();
-                        string insertData = "INSERT INTO Supplier (SupplierName, Email, MobileNumber) VALUES (@name, @email, @mnum)";
-
-                        using (SqlCommand insertCmd = new SqlCommand(insertData, connect))
-                        {
-                            insertCmd.Parameters.AddWithValue("@name", supplier_name.Text.Trim());
-                            insertCmd.Parameters.AddWithValue("@email", supplier_email.Text.Trim());
-                            insertCmd.Parameters.AddWithValue("@mnum", supplier_mnum.Text.Trim());
-
-                            insertCmd.ExecuteNonQuery();
-                            clearFields();
-                            displayAllSuppliersData();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Connection failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    finally
-                    {
-                        connect.Close();
-                    }
-                }
+                AddSupplier();
             }
         }
 
+
+
         private void supplier_updatebtn_Click(object sender, EventArgs e)
         {
-            if (supplier_name.Text == "" || supplier_email.Text == "")
+            if (AreFieldsEmpty())
             {
-                MessageBox.Show("Empty fields", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ShowError("Empty fields");
             }
-            else
+            else if (ConfirmAction($"Are you sure you want to update Supplier ID: {getID}?"))
             {
-                if (MessageBox.Show("Are you sure you want to update Supplier ID: " + getID + "?", "Confirmation Message", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                {
-                    if (checkConnection())
-                    {
-                        try
-                        {
-                            connect.Open();
-                            string updateData = "UPDATE Supplier SET SupplierName = @name, Email = @email, MobileNumber = @mnum WHERE SupplierID = @id";
-
-                            using (SqlCommand updateCmd = new SqlCommand(updateData, connect))
-                            {
-                                updateCmd.Parameters.AddWithValue("@name", supplier_name.Text.Trim());
-                                updateCmd.Parameters.AddWithValue("@email", supplier_email.Text.Trim());
-                                updateCmd.Parameters.AddWithValue("@mnum", supplier_mnum.Text.Trim());
-                                updateCmd.Parameters.AddWithValue("@id", getID);
-
-                                updateCmd.ExecuteNonQuery();
-                                clearFields();
-                                displayAllSuppliersData();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show("Connection failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                        finally
-                        {
-                            connect.Close();
-                        }
-                    }
-                }
+                UpdateSupplier();
             }
         }
 
         private void supplier_removebtn_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Are you sure you want to remove Supplier ID: " + getID + "?", "Confirmation Message", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (ConfirmAction($"Are you sure you want to remove Supplier ID: {getID}?"))
             {
-                if (checkConnection())
+                RemoveSupplier();
+            }
+        }
+
+        private void AddSupplier()
+        {
+            ExecuteQuery(
+                "INSERT INTO Supplier (SupplierName, Email, MobileNumber) VALUES (@name, @email, @mnum)",
+                new SqlParameter("@name", supplier_name.Text.Trim()),
+                new SqlParameter("@email", supplier_email.Text.Trim()),
+                new SqlParameter("@mnum", supplier_mnum.Text.Trim())
+            );
+        }
+
+        private void UpdateSupplier()
+        {
+            ExecuteQuery(
+                "UPDATE Supplier SET SupplierName = @name, Email = @email, MobileNumber = @mnum WHERE SupplierID = @id",
+                new SqlParameter("@name", supplier_name.Text.Trim()),
+                new SqlParameter("@email", supplier_email.Text.Trim()),
+                new SqlParameter("@mnum", supplier_mnum.Text.Trim()),
+                new SqlParameter("@id", getID)
+            );
+        }
+
+        private void RemoveSupplier()
+        {
+            ExecuteQuery(
+                "DELETE FROM Supplier WHERE SupplierID = @id",
+                new SqlParameter("@id", getID)
+            );
+        }
+
+        private void ExecuteQuery(string query, params SqlParameter[] parameters)
+        {
+            if (checkConnection())
+            {
+                try
                 {
-                    try
+                    connect.Open();
+                    using (SqlCommand cmd = new SqlCommand(query, connect))
                     {
-                        connect.Open();
-                        string deleteData = "DELETE FROM Supplier WHERE SupplierID = @id";
-
-                        using (SqlCommand deleteCmd = new SqlCommand(deleteData, connect))
-                        {
-                            deleteCmd.Parameters.AddWithValue("@id", getID);
-
-                            deleteCmd.ExecuteNonQuery();
-                            clearFields();
-                            displayAllSuppliersData();
-                        }
+                        cmd.Parameters.AddRange(parameters);
+                        cmd.ExecuteNonQuery();
                     }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Connection failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    finally
-                    {
-                        connect.Close();
-                    }
+                    clearFields();
+                    displayAllSuppliersData();
+                }
+                catch (Exception ex)
+                {
+                    ShowError($"Connection failed: {ex.Message}");
+                }
+                finally
+                {
+                    connect.Close();
                 }
             }
         }
+
+        private bool AreFieldsEmpty()
+        {
+            return string.IsNullOrWhiteSpace(supplier_name.Text) || string.IsNullOrWhiteSpace(supplier_email.Text);
+        }
+
+        private bool ConfirmAction(string message)
+        {
+            return MessageBox.Show(message, "Confirmation Message", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+        }
+
+        private void ShowError(string message)
+        {
+            MessageBox.Show(message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
         public void clearFields()
         {
             supplier_name.Text = "";
@@ -171,40 +164,25 @@ namespace IM101
             if (e.RowIndex != -1)
             {
                 DataGridViewRow row = supplier_dataGrid.Rows[e.RowIndex];
-
                 getID = (int)row.Cells[0].Value;
-                string name = row.Cells[1].Value.ToString();
-                string email = row.Cells[2].Value.ToString();
-                string mnum = row.Cells[3].Value.ToString();
-
-                supplier_name.Text = name;
-                supplier_email.Text = email;
-                supplier_mnum.Text = mnum;
+                supplier_name.Text = row.Cells[1].Value.ToString();
+                supplier_email.Text = row.Cells[2].Value.ToString();
+                supplier_mnum.Text = row.Cells[3].Value.ToString();
             }
         }
 
         private void supplier_search_TextChanged(object sender, EventArgs e)
         {
             supplierdata iData = new supplierdata();
-            List<supplierdata> filteredData;
-
-            if (string.IsNullOrWhiteSpace(supplier_search.Text))
-            {
-                filteredData = iData.AllSuppliersData();
-            }
-            else
-            {
-                filteredData = iData.SearchSupplier(supplier_search.Text.Trim());
-            }
-
+            List<supplierdata> filteredData = string.IsNullOrWhiteSpace(supplier_search.Text)
+                ? iData.AllSuppliersData()
+                : iData.SearchSupplier(supplier_search.Text.Trim());
             supplier_dataGrid.DataSource = filteredData;
         }
 
         private void supplier_Load(object sender, EventArgs e)
         {
-            supplier_search.Text = "Search Supplier Name";
-            supplier_search.ForeColor = Color.Gray;
-
+            ResetSearchField();
             displayAllSuppliersData();
         }
 
@@ -212,8 +190,7 @@ namespace IM101
         {
             if (string.IsNullOrWhiteSpace(supplier_search.Text))
             {
-                supplier_search.Text = "Search Supplier Name";
-                supplier_search.ForeColor = Color.Gray;
+                ResetSearchField();
             }
         }
 
@@ -226,9 +203,21 @@ namespace IM101
             }
         }
 
+        private void ResetSearchField()
+        {
+            supplier_search.Text = "Search Supplier Name";
+            supplier_search.ForeColor = Color.Gray;
+        }
+
         private void supplier_clearbtn_Click(object sender, EventArgs e)
         {
             clearFields();
+        }
+
+        private void supplier_dataGrid_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            supplier_dataGrid.ReadOnly = true;
+
         }
     }
 }

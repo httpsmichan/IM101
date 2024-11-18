@@ -158,6 +158,7 @@ namespace IM101
             {
                 string connectionString = "Data Source=SHINE;Initial Catalog=FuntilonDatabase;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True;";
                 DateTime today = DateTime.Today;
+
                 try
                 {
                     using (var localConnect = new SqlConnection(connectionString))
@@ -170,6 +171,9 @@ namespace IM101
                         // Insert Logs, Delete from Purchase, and Update Inventory
                         var productAggregates = AggregateProducts();
                         InsertLogsAndUpdateInventory(localConnect, productAggregates, today, billNo);
+
+                        // Check inventory for zero-stock items and log them
+                        HandleZeroStockItems(localConnect, today);
 
                         MessageBox.Show("Order placed successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -210,6 +214,7 @@ namespace IM101
 
             return billNo;
         }
+
 
         private Dictionary<int, int> AggregateProducts()
         {
@@ -338,6 +343,78 @@ namespace IM101
                 }
             }
         }
+
+        private void HandleZeroStockItems(SqlConnection connection, DateTime today)
+        {
+            string checkStockQuery = "SELECT ProductID, Price FROM Inventory WHERE Stocks = 0";
+            string deleteProductQuery = "DELETE FROM Inventory WHERE ProductID = @ProductID AND Stocks = 0";
+            string getTotalStockQuery = @"
+    SELECT SUM(Stocks) AS TotalStock 
+    FROM Inventory 
+    WHERE ProductID = @ProductID";  // Calculate total stock for a product
+            string insertLogQuery = @"
+INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Price, Date) 
+VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @price, @date)";
+
+            using (var transaction = connection.BeginTransaction())
+            {
+                using (var checkCommand = new SqlCommand(checkStockQuery, connection, transaction))
+                using (var deleteCommand = new SqlCommand(deleteProductQuery, connection, transaction))
+                using (var logCommand = new SqlCommand(insertLogQuery, connection, transaction))
+                using (var getTotalStockCommand = new SqlCommand(getTotalStockQuery, connection, transaction))
+                {
+                    try
+                    {
+                        using (var reader = checkCommand.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                int productId = reader.GetInt32(reader.GetOrdinal("ProductID"));
+                                decimal price = reader.IsDBNull(reader.GetOrdinal("Price")) ? 0m : reader.GetDecimal(reader.GetOrdinal("Price"));
+
+                                // Get the total stock for the product
+                                getTotalStockCommand.Parameters.Clear();
+                                getTotalStockCommand.Parameters.AddWithValue("@ProductID", productId);
+                                object totalStockResult = getTotalStockCommand.ExecuteScalar();
+                                int totalStock = totalStockResult != null ? Convert.ToInt32(totalStockResult) : 0;
+
+                                // Set both PrevStock and NewStock to the total stock
+                                int prevStock = totalStock;
+                                int newStock = totalStock;  // No actual change in stock, just tracking the total left
+
+                                // Insert the log for deletion with PrevStock and NewStock both set to the total stock
+                                string username = Form1.username.Substring(0, 1).ToUpper() + Form1.username.Substring(1).ToLower();
+                                logCommand.Parameters.Clear();
+                                logCommand.Parameters.AddWithValue("@actionType", "Stock at Capacity");
+                                logCommand.Parameters.AddWithValue("@prodID", productId);
+                                logCommand.Parameters.AddWithValue("@quantityChange", 0); // No quantity change
+                                logCommand.Parameters.AddWithValue("@prevStock", prevStock); // Total stock
+                                logCommand.Parameters.AddWithValue("@newStock", newStock); // Total stock
+                                logCommand.Parameters.AddWithValue("@staff", "@" + username);
+                                logCommand.Parameters.AddWithValue("@price", price);
+                                logCommand.Parameters.AddWithValue("@date", today);
+                                logCommand.ExecuteNonQuery();
+
+                                // Delete the product with zero stock (ensuring the condition for Stocks = 0)
+                                deleteCommand.Parameters.Clear();
+                                deleteCommand.Parameters.AddWithValue("@ProductID", productId);
+                                deleteCommand.ExecuteNonQuery();
+                            }
+                        }
+
+                        // Commit transaction if everything succeeded
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Rollback transaction if any error occurs
+                        transaction.Rollback();
+                        Console.WriteLine("Error: " + ex.Message);
+                    }
+                }
+            }
+        }
+
 
         private void order_Cashamount_TextChanged(object sender, EventArgs e)
         {

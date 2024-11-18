@@ -167,7 +167,7 @@ namespace IM101
                         string username = Form1.username.Substring(0, 1).ToUpper() + Form1.username.Substring(1).ToLower();
                         string formattedStaffName = "@" + username;
 
-                        insertLogCmd.Parameters.AddWithValue("@actionType", "Inventory Adjustment");
+                        insertLogCmd.Parameters.AddWithValue("@actionType", "Inventory Addition");
                         insertLogCmd.Parameters.AddWithValue("@prodID", productID);
                         insertLogCmd.Parameters.AddWithValue("@quantityChange", quantityChange);
                         insertLogCmd.Parameters.AddWithValue("@prevStock", prevStock);
@@ -286,7 +286,7 @@ namespace IM101
                         string username = Form1.username.Substring(0, 1).ToUpper() + Form1.username.Substring(1).ToLower();
                         string formattedStaffName = "@" + username;
 
-                        insertLogCmd.Parameters.AddWithValue("@actionType", "Inventory Removal");
+                        insertLogCmd.Parameters.AddWithValue("@actionType", "Inventory Reduction");
                         insertLogCmd.Parameters.AddWithValue("@prodID", productID);
                         insertLogCmd.Parameters.AddWithValue("@quantityChange", -quantityChange); 
                         insertLogCmd.Parameters.AddWithValue("@prevStock", prevStock);
@@ -382,6 +382,9 @@ namespace IM101
             }
         }
 
-
+        private void inventory_grid_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            inventory_grid.ReadOnly = true;
+        }
     }
 }

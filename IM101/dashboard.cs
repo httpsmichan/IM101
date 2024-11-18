@@ -20,6 +20,11 @@ namespace IM101
         public dashboard()
         {
             InitializeComponent();
+            InitializeDashboard();
+        }
+
+        private void InitializeDashboard()
+        {
             displayTodayCustomer();
             displayAllusers();
             displayAllCustomers();
@@ -31,9 +36,11 @@ namespace IM101
 
         private void InitializeTimer()
         {
-            refreshTimer = new Timer();
-            refreshTimer.Interval = 5000;
-            refreshTimer.Tick += new EventHandler(RefreshTimer_Tick);
+            refreshTimer = new Timer
+            {
+                Interval = 5000
+            };
+            refreshTimer.Tick += RefreshTimer_Tick;
             refreshTimer.Start();
         }
 
@@ -41,6 +48,7 @@ namespace IM101
         {
             refreshData();
         }
+
         public void refreshData()
         {
             if (InvokeRequired)
@@ -48,18 +56,18 @@ namespace IM101
                 Invoke((MethodInvoker)refreshData);
                 return;
             }
+
             displayAllusers();
             displayAllCustomers();
             displayTodaysIncome();
             overallTotalIncome();
         }
 
+
         public void displayTodayCustomer()
         {
-            customersdata cData = new customersdata();
-
+            var cData = new customersdata();
             List<customersdata> listData = cData.allTodayCustomers();
-
             dataGridView_todayc.DataSource = listData;
             dataGridView_todayc.Refresh();
 
@@ -67,155 +75,141 @@ namespace IM101
 
         public bool checkConnection()
         {
-            if (connect.State == ConnectionState.Closed)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return connect.State == ConnectionState.Closed;
         }
 
         public void displayAllusers()
         {
-            if (checkConnection())
+            if (!checkConnection()) return;
+
+            try
             {
-                try
+                connect.Open();
+                string query = "SELECT COUNT(*) FROM Staff";
+
+                using (var cmd = new SqlCommand(query, connect))
                 {
-                    connect.Open();
-
-                    string selectData = "SELECT COUNT(*) FROM Staff";
-
-                    using (SqlCommand cmd = new SqlCommand(selectData, connect))
+                    cmd.Parameters.AddWithValue("@role", "Cashier");
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        cmd.Parameters.AddWithValue("@role", "Cashier");
-
-                        SqlDataReader reader = cmd.ExecuteReader();
-
                         if (reader.Read())
                         {
                             int count = Convert.ToInt32(reader[0]);
                             allusers.Text = count.ToString();
                         }
-                        reader.Close();
                     }
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Connection Failed: " + ex, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    connect.Close();
-                }
+            }
+            catch (Exception ex)
+            {
+                ShowConnectionError(ex);
+            }
+            finally
+            {
+                connect.Close();
             }
         }
 
         public void displayAllCustomers()
         {
-            if (checkConnection())
+            if (!checkConnection()) return;
+
+            try
             {
-                try
+                connect.Open();
+                string query = "SELECT COUNT(*) FROM Billing";
+
+                using (var cmd = new SqlCommand(query, connect))
                 {
-                    connect.Open();
-
-                    string selectData = "SELECT COUNT(*) FROM Billing";
-
-                    using (SqlCommand cmd = new SqlCommand(selectData, connect))
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        SqlDataReader reader = cmd.ExecuteReader();
-
                         if (reader.Read())
                         {
                             int count = Convert.ToInt32(reader[0]);
                             allcustomers.Text = count.ToString();
                         }
-                        reader.Close();
                     }
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Connection Failed: " + ex, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    connect.Close();
-                }
+            }
+            catch (Exception ex)
+            {
+                ShowConnectionError(ex);
+            }
+            finally
+            {
+                connect.Close();
             }
         }
 
         public void displayTodaysIncome()
         {
-            if (checkConnection())
-            {
-                try
-                {
-                    connect.Open();
-                    string selectData = "SELECT SUM(TotalPrice) FROM Billing WHERE OrderDate = @date";
-                    using (SqlCommand cmd = new SqlCommand(selectData, connect))
-                    {
-                        DateTime today = DateTime.Today;
-                        String getString = today.ToString("yyyy-MM-dd");
-                        cmd.Parameters.AddWithValue("@date", getString);
-                        SqlDataReader reader = cmd.ExecuteReader();
+            if (!checkConnection()) return;
 
+            try
+            {
+                connect.Open();
+                string query = "SELECT SUM(TotalPrice) FROM Billing WHERE OrderDate = @date";
+
+                using (var cmd = new SqlCommand(query, connect))
+                {
+                    cmd.Parameters.AddWithValue("@date", DateTime.Today.ToString("yyyy-MM-dd"));
+
+                    using (var reader = cmd.ExecuteReader())
+                    {
                         if (reader.Read())
                         {
                             object value = reader[0];
-                            if (value != DBNull.Value && value != null)
-                            {
-                                decimal count = Convert.ToDecimal(value);
-                                todayincome.Text = count.ToString("0.00");
-                            }
-                            else
-                            {
-                                todayincome.Text = "0.00";
-                            }
-                            reader.Close();
+                            todayincome.Text = (value != DBNull.Value && value != null)
+                                ? Convert.ToDecimal(value).ToString("0.00")
+                                : "0.00";
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Connection Failed: " + ex, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    connect.Close();
-                }
+            }
+            catch (Exception ex)
+            {
+                ShowConnectionError(ex);
+            }
+            finally
+            {
+                connect.Close();
             }
         }
 
-
         public void overallTotalIncome()
         {
-            if (checkConnection())
+            if (!checkConnection()) return;
+
+            try
             {
-                try
+                connect.Open();
+                string query = "SELECT SUM(TotalPrice) FROM Billing";
+
+                using (var cmd = new SqlCommand(query, connect))
                 {
-                    connect.Open();
-                    string selectData = "SELECT SUM(TotalPrice) FROM Billing";
-                    using (SqlCommand cmd = new SqlCommand(selectData, connect))
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        SqlDataReader reader = cmd.ExecuteReader();
                         if (reader.Read())
                         {
-                            decimal count = Convert.ToDecimal(reader[0]);
-                            totalincome.Text = count.ToString("0.00");
+                            decimal total = Convert.ToDecimal(reader[0]);
+                            totalincome.Text = total.ToString("0.00");
                         }
-                        reader.Close();
                     }
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Connection Failed: " + ex, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    connect.Close();
-                }
             }
+            catch (Exception ex)
+            {
+                ShowConnectionError(ex);
+            }
+            finally
+            {
+                connect.Close();
+            }
+        }
+
+        private void ShowConnectionError(Exception ex)
+        {
+            MessageBox.Show($"Connection Failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private void dataGridView_todayc_CellContentClick(object sender, DataGridViewCellEventArgs e)

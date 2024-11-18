@@ -83,5 +83,10 @@ namespace IM101
 
             displayLogs();
         }
+
+        private void logs_datagrid_CellContentClick_1(object sender, DataGridViewCellEventArgs e)
+        {
+            logs_datagrid.ReadOnly = true;
+        }
     }
 }

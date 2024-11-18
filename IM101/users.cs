@@ -34,18 +34,11 @@ namespace IM101
         public void displayAllUsersData()
         {
             usersdata udata = new usersdata();
-
             List<usersdata> listData = udata.AllUsersData();
-
             adduser_dataGrid.DataSource = listData;
-
-            adduser_dataGrid.Columns[0].Width = 78;
-            adduser_dataGrid.Columns[1].Width = 200;
-            adduser_dataGrid.Columns[2].Width = 200;
-            adduser_dataGrid.Columns[3].Width = 200;
-            adduser_dataGrid.Columns[4].Width = 100;
-            adduser_dataGrid.Columns[5].Width = 200;
+           
         }
+
 
         private void adduser_addbtn_Click(object sender, EventArgs e)
         {
@@ -55,54 +48,65 @@ namespace IM101
             }
             else
             {
-                if (checkConnection())
+                AddUser();
+            }
+        }
+
+        private void AddUser()
+        {
+            if (checkConnection())
+            {
+                try
                 {
-                    try
+                    connect.Open();
+                    if (IsUsernameTaken(adduser_uname.Text.Trim()))
                     {
-                        connect.Open();
-                        string checkUsername = "SELECT * FROM Staff WHERE username = @usern";
-
-                        using (SqlCommand cmd = new SqlCommand(checkUsername, connect))
-                        {
-                            cmd.Parameters.AddWithValue("@usern", adduser_uname.Text.Trim());
-
-                            SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-                            DataTable table = new DataTable();
-                            adapter.Fill(table);
-
-                            if (table.Rows.Count > 0)
-                            {
-                                MessageBox.Show(adduser_role.Text.Trim() + "", "is already taken", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            }
-                            else
-                            {
-                                string insertData = "INSERT INTO Staff (username, password, role, email, mobilenum)" + "VALUES(@usern, @pass, @role, @email, @mnum)";
-
-                                using (SqlCommand insertID = new SqlCommand(insertData, connect))
-                                {
-                                    insertID.Parameters.AddWithValue("@usern", adduser_uname.Text.Trim());
-                                    insertID.Parameters.AddWithValue("@pass", adduser_pass.Text.Trim());
-                                    insertID.Parameters.AddWithValue("@role", adduser_role.SelectedItem.ToString());
-                                    insertID.Parameters.AddWithValue("@email", adduser_email.Text.Trim());
-                                    insertID.Parameters.AddWithValue("@mnum", adduser_mnum.Text.Trim());
-
-
-                                    insertID.ExecuteNonQuery();
-                                    clearFields();
-                                    displayAllUsersData();
-                                }
-                            }
-                        }
+                        MessageBox.Show(adduser_role.Text.Trim() + " is already taken", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        MessageBox.Show("Connection failed" + ex, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    finally
-                    {
-                        connect.Close();
+                        InsertUser(adduser_uname.Text.Trim(), adduser_pass.Text.Trim(), adduser_role.SelectedItem.ToString(),
+                                   adduser_email.Text.Trim(), adduser_mnum.Text.Trim());
+                        clearFields();
+                        displayAllUsersData();
                     }
                 }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Connection failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    connect.Close();
+                }
+            }
+        }
+
+        private bool IsUsernameTaken(string username)
+        {
+            string checkUsername = "SELECT * FROM Staff WHERE username = @usern";
+            using (SqlCommand cmd = new SqlCommand(checkUsername, connect))
+            {
+                cmd.Parameters.AddWithValue("@usern", username);
+                SqlDataAdapter adapter = new SqlDataAdapter(cmd);
+                DataTable table = new DataTable();
+                adapter.Fill(table);
+                return table.Rows.Count > 0;
+            }
+        }
+
+        private void InsertUser(string username, string password, string role, string email, string mobilenum)
+        {
+            string insertData = "INSERT INTO Staff (username, password, role, email, mobilenum) " +
+                                "VALUES(@usern, @pass, @role, @email, @mnum)";
+            using (SqlCommand insertID = new SqlCommand(insertData, connect))
+            {
+                insertID.Parameters.AddWithValue("@usern", username);
+                insertID.Parameters.AddWithValue("@pass", password);
+                insertID.Parameters.AddWithValue("@role", role);
+                insertID.Parameters.AddWithValue("@email", email);
+                insertID.Parameters.AddWithValue("@mnum", mobilenum);
+                insertID.ExecuteNonQuery();
             }
         }
 
@@ -114,39 +118,50 @@ namespace IM101
             }
             else
             {
-                if (MessageBox.Show("Are you sure you want to Update User ID: " + getID + "?", "Confirmation Message", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                UpdateUser();
+            }
+        }
+
+        private void UpdateUser()
+        {
+            if (MessageBox.Show($"Are you sure you want to update User ID: {getID}?", "Confirmation Message", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                if (checkConnection())
                 {
-                    if (checkConnection())
+                    try
                     {
-                        try
-                        {
-                            connect.Open();
-                            string updateData = "UPDATE Staff SET username = @usern, password = @pass, role = @role, email = @email, mobilenum = @mnum WHERE staffid = @id";
-
-                            using (SqlCommand updateD = new SqlCommand(updateData, connect))
-                            {
-                                updateD.Parameters.AddWithValue("@usern", adduser_uname.Text.Trim());
-                                updateD.Parameters.AddWithValue("@pass", adduser_pass.Text.Trim());
-                                updateD.Parameters.AddWithValue("@role", adduser_role.SelectedItem.ToString());
-                                updateD.Parameters.AddWithValue("@email", adduser_email.Text.Trim());
-                                updateD.Parameters.AddWithValue("@mnum", adduser_mnum.Text.Trim());
-                                updateD.Parameters.AddWithValue("@id", getID);
-
-                                updateD.ExecuteNonQuery();
-                                clearFields();
-                                displayAllUsersData();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show("Connection failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                        finally
-                        {
-                            connect.Close();
-                        }
+                        connect.Open();
+                        string updateData = "UPDATE Staff SET username = @usern, password = @pass, role = @role, email = @email, mobilenum = @mnum WHERE staffid = @id";
+                        ExecuteNonQuery(updateData, adduser_uname.Text.Trim(), adduser_pass.Text.Trim(), adduser_role.SelectedItem.ToString(), adduser_email.Text.Trim(), adduser_mnum.Text.Trim(), getID);
+                        clearFields();
+                        displayAllUsersData();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Connection failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        connect.Close();
                     }
                 }
+            }
+        }
+
+        private void ExecuteNonQuery(string query, string username, string password, string role, string email, string mobilenum, int id = 0)
+        {
+            using (SqlCommand cmd = new SqlCommand(query, connect))
+            {
+                cmd.Parameters.AddWithValue("@usern", username);
+                cmd.Parameters.AddWithValue("@pass", password);
+                cmd.Parameters.AddWithValue("@role", role);
+                cmd.Parameters.AddWithValue("@email", email);
+                cmd.Parameters.AddWithValue("@mnum", mobilenum);
+                if (id != 0)
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                }
+                cmd.ExecuteNonQuery();
             }
         }
         public void clearFields()
@@ -172,46 +187,40 @@ namespace IM101
             }
             else
             {
-                if (MessageBox.Show("Are you sure you want to Remove User ID: " + getID + "?", "Confirmation Message", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                RemoveUser();
+            }
+        }
+
+        private void RemoveUser()
+        {
+            if (MessageBox.Show($"Are you sure you want to remove User ID: {getID}?", "Confirmation Message", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                if (checkConnection())
                 {
-                    if (checkConnection())
+                    try
                     {
-                        try
-                        {
-                            connect.Open();
-                            string updateData = "DELETE FROM Staff WHERE staffid = @id";
-
-                            using (SqlCommand updateD = new SqlCommand(updateData, connect))
-                            {
-                                updateD.Parameters.AddWithValue("@id", getID);
-
-                                updateD.ExecuteNonQuery();
-                                clearFields();
-                                displayAllUsersData();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show("Connection failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                        finally
-                        {
-                            connect.Close();
-                        }
+                        connect.Open();
+                        string deleteData = "DELETE FROM Staff WHERE staffid = @id";
+                        ExecuteNonQuery(deleteData, "", "", "", "", "", getID);
+                        clearFields();
+                        displayAllUsersData();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Connection failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        connect.Close();
                     }
                 }
             }
         }
+
+
         public bool checkConnection()
         {
-            if (connect.State == ConnectionState.Closed)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return connect.State == ConnectionState.Closed;
         }
 
         private int getID = 0;
@@ -221,20 +230,12 @@ namespace IM101
             if (e.RowIndex != -1)
             {
                 DataGridViewRow row = adduser_dataGrid.Rows[e.RowIndex];
-
                 getID = (int)row.Cells[0].Value;
-                string username = row.Cells[1].Value.ToString();
-                string password = row.Cells[2].Value.ToString();
-                string role = row.Cells[4].Value.ToString();
-                string email = row.Cells[3].Value.ToString();
-                string mnum = row.Cells[5].Value.ToString();
-
-                adduser_uname.Text = username;
-                adduser_pass.Text = password;
-                adduser_role.Text = role;
-                adduser_email.Text = email;
-                adduser_mnum.Text = mnum;
-
+                adduser_uname.Text = row.Cells[1].Value.ToString();
+                adduser_pass.Text = row.Cells[2].Value.ToString();
+                adduser_role.Text = row.Cells[4].Value.ToString();
+                adduser_email.Text = row.Cells[3].Value.ToString();
+                adduser_mnum.Text = row.Cells[5].Value.ToString();
             }
         }
 
@@ -246,21 +247,9 @@ namespace IM101
         private void staff_search_TextChanged(object sender, EventArgs e)
         {
             usersdata uData = new usersdata();
-            List<usersdata> filteredData;
-
-            if (staff_search.Text == "Enter Staff ID")
-            {
-                filteredData = uData.AllUsersData();
-            }
-            else if (string.IsNullOrWhiteSpace(staff_search.Text))
-            {
-                filteredData = uData.AllUsersData();
-            }
-            else
-            {
-                filteredData = uData.SearchUsers(staff_search.Text.Trim());
-            }
-
+            List<usersdata> filteredData = staff_search.Text == "Enter Staff ID" || string.IsNullOrWhiteSpace(staff_search.Text)
+                ? uData.AllUsersData()
+                : uData.SearchUsers(staff_search.Text.Trim());
             adduser_dataGrid.DataSource = filteredData;
         }
 
@@ -286,7 +275,6 @@ namespace IM101
         {
             staff_search.Text = "Search StaffID or Username";
             staff_search.ForeColor = Color.Gray;
-
             displayAllUsersData();
 
         }
