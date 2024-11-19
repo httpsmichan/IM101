@@ -145,6 +145,7 @@ namespace IM101
                         {
                             connect.Open();
 
+                            // Prepare the SQL UPDATE statement for the Product table
                             string updateData = "UPDATE Product SET ProductName = @prodname, Category = @cat, " +
                                 "Price = @price, Status = @status, Date = @date WHERE ProductID = @prodID";
 
@@ -159,8 +160,16 @@ namespace IM101
                                 else
                                     updateD.Parameters.AddWithValue("@cat", DBNull.Value);
 
-                                // Assign Price
-                                updateD.Parameters.AddWithValue("@price", addprod_price.Text.Trim());
+                                // Ensure Price is a valid decimal before passing it to the SQL query
+                                if (decimal.TryParse(addprod_price.Text.Trim(), out decimal price))
+                                {
+                                    updateD.Parameters.AddWithValue("@price", price);
+                                }
+                                else
+                                {
+                                    MessageBox.Show("Invalid price format.", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    return;
+                                }
 
                                 // Assign Status (use DBNull.Value if null)
                                 if (addprod_status.SelectedItem != null)
@@ -168,24 +177,26 @@ namespace IM101
                                 else
                                     updateD.Parameters.AddWithValue("@status", DBNull.Value);
 
-                                // Assign Date
+                                // Assign Date (today's date)
                                 DateTime today = DateTime.Today;
                                 updateD.Parameters.AddWithValue("@date", today);
 
-                                // Assign ProductID (ensure `getID` has the correct product ID value)
+                                // Assign ProductID
                                 updateD.Parameters.AddWithValue("@prodID", getID);
 
-                                // Execute the query
+                                // Execute the query to update the Product table
                                 updateD.ExecuteNonQuery();
 
-                                // Clear fields and refresh product list
+                                // Clear fields and refresh the product list (Inventory will update automatically due to the trigger)
                                 clearFields();
                                 displayAllProducts();
+
+                                MessageBox.Show("Product updated successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             }
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show("Failed connection: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show("Failed to update the product: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                         finally
                         {
@@ -316,13 +327,6 @@ namespace IM101
                             {
                                 deleteD.Parameters.AddWithValue("@prodID", getID);
                                 deleteD.ExecuteNonQuery();
-                            }
-
-                            string deleteInventory = "DELETE FROM Inventory WHERE ProductID = @prodID";
-                            using (SqlCommand cmd = new SqlCommand(deleteInventory, connect))
-                            {
-                                cmd.Parameters.AddWithValue("@prodID", getID);
-                                cmd.ExecuteNonQuery();
                             }
 
                             clearFields();

@@ -16,7 +16,6 @@ namespace IM101
         public int? PrevStock { get; set; } 
         public int? NewStock { get; set; } 
         public string Staff { get; set; } 
-        public double? Price { get; set; } 
         public DateTime Date { get; set; }
 
 
@@ -46,7 +45,6 @@ namespace IM101
                             PrevStock = reader["PrevStock"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["PrevStock"]),
                             NewStock = reader["NewStock"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["NewStock"]),
                             Staff = reader["Staff"] == DBNull.Value ? null : reader["Staff"].ToString(),
-                            Price = reader["Price"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["Price"]),
                             Date = Convert.ToDateTime(reader["Date"])
                         };
 

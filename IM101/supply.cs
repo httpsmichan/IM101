@@ -115,8 +115,7 @@ namespace IM101
                 // Ensure the connection is open before starting any SQL commands
                 if (connect.State != ConnectionState.Open)
                 {
-                    connect.Open();  // Open connection if it's not already open
-                    MessageBox.Show("Connection is open.");
+                    connect.Open(); 
                 }
 
                 // Check if product exists in Product table
@@ -158,7 +157,7 @@ namespace IM101
                 else
                 {
                     MessageBox.Show("The status is not 'Received'. Current value: " + supply_status.SelectedItem.ToString());
-                    return; // Exit early if the status isn't 'Received'
+                    return; 
                 }
 
                 // Insert supply data into the Supply table
@@ -187,8 +186,6 @@ namespace IM101
 
                 // Call the InsertInventory method to insert into Inventory table
                 InsertInventory(connect, supply_prodID.Text, productName, unitCost, supply_qtys.Text);
-
-                MessageBox.Show("Supply data added successfully!");
                 clearFields();
             }
             catch (Exception ex)
@@ -200,8 +197,7 @@ namespace IM101
                 // Ensure that the connection is closed at the end of the process.
                 if (connect.State == ConnectionState.Open)
                 {
-                    connect.Close(); // Close the connection after all operations
-                    MessageBox.Show("Connection closed.");
+                    connect.Close(); 
                 }
 
                 DisplayAllSupplies(); // Refresh UI or data view
@@ -212,33 +208,11 @@ namespace IM101
         {
             try
             {
-                // Ensure the connection is open before starting any query
                 if (connection.State != ConnectionState.Open)
                 {
-                    connection.Open(); // Open connection explicitly before the query
+                    connection.Open(); 
                 }
 
-                // Fetch the Price from the Inventory table for the given ProductID
-                double price = 0;
-
-                string getPriceQuery = "SELECT Price FROM Inventory WHERE ProductID = @ProductID";
-                using (SqlCommand getPriceCommand = new SqlCommand(getPriceQuery, connection))
-                {
-                    getPriceCommand.Parameters.AddWithValue("@ProductID", productID);
-                    object priceResult = getPriceCommand.ExecuteScalar(); // Fetch price from Inventory table
-
-                    if (priceResult != null && priceResult != DBNull.Value)
-                    {
-                        price = Convert.ToDouble(priceResult);
-                    }
-                    else
-                    {
-                        // If no price is found, use the provided unitCost (or handle the error appropriately)
-                        price = unitCost; // Default to provided unitCost if not found
-                    }
-                }
-
-                // Insert supply data into the Inventory table with the fetched or provided Price
                 string insertInventoryQuery = "INSERT INTO Inventory (ProductID, ProductName, Price, Stocks, Amount, Date) " +
                                                "VALUES (@ProductID, @ProductName, @Price, @Stocks, @Amount, @Date)";
 
@@ -246,12 +220,12 @@ namespace IM101
                 {
                     inventoryCommand.Parameters.AddWithValue("@ProductID", productID);
                     inventoryCommand.Parameters.AddWithValue("@ProductName", productName);
-                    inventoryCommand.Parameters.AddWithValue("@Price", price); // Use the fetched price
+                    inventoryCommand.Parameters.AddWithValue("@Price", unitCost); 
                     inventoryCommand.Parameters.AddWithValue("@Stocks", quantitySupplied);
                     inventoryCommand.Parameters.AddWithValue("@Amount", "pcs");
                     inventoryCommand.Parameters.AddWithValue("@Date", DateTime.Today);
 
-                    inventoryCommand.ExecuteNonQuery(); // Execute inventory insert
+                    inventoryCommand.ExecuteNonQuery(); 
                 }
 
                 Console.WriteLine("Inventory data inserted successfully!");
@@ -261,7 +235,6 @@ namespace IM101
                 MessageBox.Show("Error inserting inventory: " + ex.Message);
             }
         }
-
 
         private void InsertLogEntry(SqlConnection connection, string productID, string quantitySupplied, string actionType)
         {
@@ -279,23 +252,10 @@ namespace IM101
                 // Calculate the new stock after the supply is added (NewStock)
                 int newStock = prevStock + Convert.ToInt32(quantitySupplied);
 
-                // Fetch the price from the Inventory table (based on ProductID)
-                double price = 0;
-                string getPriceQuery = "SELECT Price FROM Inventory WHERE ProductID = @ProductID";
-
-                using (SqlCommand priceCommand = new SqlCommand(getPriceQuery, connection))
-                {
-                    priceCommand.Parameters.AddWithValue("@ProductID", productID);
-                    object result = priceCommand.ExecuteScalar();
-                    if (result != DBNull.Value && result != null)
-                    {
-                        price = Convert.ToDouble(result);
-                    }
-                }
 
                 // Insert the log with correct values for PrevStock and NewStock
-                string insertLogQuery = "INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Price, Date) " +
-                                        "VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @price, @date)";
+                string insertLogQuery = "INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Date) " +
+                                        "VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @date)";
 
                 using (var cmdLog = new SqlCommand(insertLogQuery, connection))
                 {
@@ -307,9 +267,8 @@ namespace IM101
                     cmdLog.Parameters.AddWithValue("@quantityChange", quantitySupplied); // Quantity supplied (change in stock)
                     cmdLog.Parameters.AddWithValue("@prevStock", prevStock); // Stock before the supply (PrevStock)
                     cmdLog.Parameters.AddWithValue("@newStock", newStock); // Stock after the supply (NewStock)
-                    cmdLog.Parameters.AddWithValue("@staff", "@" + username); // Staff handling the update
-                    cmdLog.Parameters.AddWithValue("@price", price); // Price fetched from the Inventory table
-                    cmdLog.Parameters.AddWithValue("@date", DateTime.Now); // Date of the action
+                    cmdLog.Parameters.AddWithValue("@staff", "@" + username); 
+                    cmdLog.Parameters.AddWithValue("@date", DateTime.Now); 
 
                     cmdLog.ExecuteNonQuery(); // Execute the command to insert the log
                 }
@@ -459,17 +418,6 @@ namespace IM101
                     command.Parameters.AddWithValue("@ProductID", supply_prodID.Text);
 
                     command.ExecuteNonQuery();
-                }
-
-                // Update Inventory by subtracting the qtySupplied
-                string updateInventoryQuery = "UPDATE Inventory SET Quantity = Quantity - @Quantity WHERE ProductID = @ProductID";
-
-                using (SqlCommand inventoryCommand = new SqlCommand(updateInventoryQuery, connect))
-                {
-                    inventoryCommand.Parameters.AddWithValue("@Quantity", qtySupplied);
-                    inventoryCommand.Parameters.AddWithValue("@ProductID", supply_prodID.Text);
-
-                    inventoryCommand.ExecuteNonQuery();
                 }
 
                 MessageBox.Show("Supply data removed successfully!");

@@ -143,8 +143,6 @@ namespace IM101
                                 updateCmd.ExecuteNonQuery();
                                 clearFields();
                                 displayCategoriesData();
-
-
                             }
                         }
                         catch (Exception ex)
@@ -157,7 +155,6 @@ namespace IM101
                         }
                     }
                 }
-
             }
         }
 

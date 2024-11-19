@@ -159,8 +159,8 @@ namespace IM101
 
                     // Insert into Logs table
                     string insertLogQuery = @"
-                INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Price, Date)
-                VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @price, @date)";
+                INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Date)
+                VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @date)";
 
                     using (SqlCommand insertLogCmd = new SqlCommand(insertLogQuery, connect))
                     {
@@ -173,7 +173,6 @@ namespace IM101
                         insertLogCmd.Parameters.AddWithValue("@prevStock", prevStock);
                         insertLogCmd.Parameters.AddWithValue("@newStock", newStock);
                         insertLogCmd.Parameters.AddWithValue("@staff", formattedStaffName);
-                        insertLogCmd.Parameters.AddWithValue("@price", Convert.ToDouble(inventory_price.Text.Trim()));
                         insertLogCmd.Parameters.AddWithValue("@date", DateTime.Now);
 
                         insertLogCmd.ExecuteNonQuery();
@@ -278,9 +277,10 @@ namespace IM101
 
                     // Insert into Logs table with correct stock values
                     string insertLogQuery = @"
-            INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Price, Date)
-            VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @price, @date)";
+            INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Date)
+            VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @date)";
 
+                    
                     using (SqlCommand insertLogCmd = new SqlCommand(insertLogQuery, connect))
                     {
                         string username = Form1.username.Substring(0, 1).ToUpper() + Form1.username.Substring(1).ToLower();
@@ -292,7 +292,6 @@ namespace IM101
                         insertLogCmd.Parameters.AddWithValue("@prevStock", prevStock);
                         insertLogCmd.Parameters.AddWithValue("@newStock", newStock);
                         insertLogCmd.Parameters.AddWithValue("@staff", formattedStaffName);
-                        insertLogCmd.Parameters.AddWithValue("@price", Convert.ToDouble(inventory_price.Text.Trim()));
                         insertLogCmd.Parameters.AddWithValue("@date", DateTime.Now);
 
                         insertLogCmd.ExecuteNonQuery();

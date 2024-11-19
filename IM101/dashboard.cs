@@ -85,18 +85,33 @@ namespace IM101
             try
             {
                 connect.Open();
-                string query = "SELECT COUNT(*) FROM Staff";
+                string query = "SELECT Role, StaffCount FROM dbo.GetStaffCount()"; 
 
                 using (var cmd = new SqlCommand(query, connect))
                 {
-                    cmd.Parameters.AddWithValue("@role", "Cashier");
                     using (var reader = cmd.ExecuteReader())
                     {
-                        if (reader.Read())
+                        int adminCount = 0;
+                        int cashierCount = 0;
+
+                        while (reader.Read())
                         {
-                            int count = Convert.ToInt32(reader[0]);
-                            allusers.Text = count.ToString();
+                            string role = reader["Role"].ToString();
+                            int staffCount = Convert.ToInt32(reader["StaffCount"]);
+
+                            if (role == "Admin")
+                            {
+                                adminCount = staffCount;  
+                            }
+                            else if (role == "Cashier")
+                            {
+                                cashierCount = staffCount;  
+                            }
                         }
+
+                        int totalCount = adminCount + cashierCount;
+
+                        allusers.Text = totalCount.ToString();
                     }
                 }
             }
@@ -117,18 +132,15 @@ namespace IM101
             try
             {
                 connect.Open();
-                string query = "SELECT COUNT(*) FROM Billing";
+                string query = "SELECT dbo.GetTotalCustomers()";  
 
                 using (var cmd = new SqlCommand(query, connect))
                 {
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            int count = Convert.ToInt32(reader[0]);
-                            allcustomers.Text = count.ToString();
-                        }
-                    }
+
+                    var result = cmd.ExecuteScalar();
+
+
+                    allcustomers.Text = result != DBNull.Value ? Convert.ToInt32(result).ToString() : "0";
                 }
             }
             catch (Exception ex)
@@ -140,6 +152,7 @@ namespace IM101
                 connect.Close();
             }
         }
+
 
         public void displayTodaysIncome()
         {
@@ -148,22 +161,15 @@ namespace IM101
             try
             {
                 connect.Open();
-                string query = "SELECT SUM(TotalPrice) FROM Billing WHERE OrderDate = @date";
+                string query = "SELECT dbo.GetTodaysIncome()";  
 
                 using (var cmd = new SqlCommand(query, connect))
                 {
-                    cmd.Parameters.AddWithValue("@date", DateTime.Today.ToString("yyyy-MM-dd"));
+                    var result = cmd.ExecuteScalar();
 
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            object value = reader[0];
-                            todayincome.Text = (value != DBNull.Value && value != null)
-                                ? Convert.ToDecimal(value).ToString("0.00")
-                                : "0.00";
-                        }
-                    }
+                    todayincome.Text = result != DBNull.Value
+                        ? Convert.ToDecimal(result).ToString("0.00")
+                        : "0.00";
                 }
             }
             catch (Exception ex)
@@ -175,6 +181,7 @@ namespace IM101
                 connect.Close();
             }
         }
+
 
         public void overallTotalIncome()
         {
@@ -183,18 +190,15 @@ namespace IM101
             try
             {
                 connect.Open();
-                string query = "SELECT SUM(TotalPrice) FROM Billing";
+                string query = "SELECT dbo.GetOverallTotalIncome()";  
 
                 using (var cmd = new SqlCommand(query, connect))
                 {
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            decimal total = Convert.ToDecimal(reader[0]);
-                            totalincome.Text = total.ToString("0.00");
-                        }
-                    }
+
+                    var result = cmd.ExecuteScalar();
+
+
+                    totalincome.Text = result != DBNull.Value ? Convert.ToDecimal(result).ToString("0.00") : "0.00";
                 }
             }
             catch (Exception ex)
@@ -206,6 +210,7 @@ namespace IM101
                 connect.Close();
             }
         }
+
 
         private void ShowConnectionError(Exception ex)
         {
