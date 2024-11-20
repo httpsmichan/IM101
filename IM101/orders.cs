@@ -362,7 +362,8 @@ namespace IM101
             productdata proddata = new productdata();
             List<productdata> filteredData;
 
-            if (string.IsNullOrWhiteSpace(textBox1.Text))
+            // Check if the search text is empty or contains the placeholder text
+            if (string.IsNullOrWhiteSpace(textBox1.Text) || textBox1.Text == "Search Products")
             {
                 filteredData = proddata.allAvailableProducts();
             }

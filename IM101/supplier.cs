@@ -174,9 +174,18 @@ namespace IM101
         private void supplier_search_TextChanged(object sender, EventArgs e)
         {
             supplierdata iData = new supplierdata();
-            List<supplierdata> filteredData = string.IsNullOrWhiteSpace(supplier_search.Text)
-                ? iData.AllSuppliersData()
-                : iData.SearchSupplier(supplier_search.Text.Trim());
+            List<supplierdata> filteredData;
+
+            // Check if the search text is empty or contains the placeholder text
+            if (string.IsNullOrWhiteSpace(supplier_search.Text) || supplier_search.Text == "Search Suppliers")
+            {
+                filteredData = iData.AllSuppliersData();
+            }
+            else
+            {
+                filteredData = iData.SearchSupplier(supplier_search.Text.Trim());
+            }
+
             supplier_dataGrid.DataSource = filteredData;
         }
 

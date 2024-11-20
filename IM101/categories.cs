@@ -224,7 +224,7 @@ namespace IM101
             categoriesdata cData = new categoriesdata();
             List<categoriesdata> filteredData;
 
-            if (string.IsNullOrWhiteSpace(category_search.Text))
+            if (string.IsNullOrWhiteSpace(category_search.Text) || category_search.Text == "Search Category")
             {
                 filteredData = cData.AllCategoriesData();
             }

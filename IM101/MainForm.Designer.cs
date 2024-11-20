@@ -31,15 +31,6 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.cashierCustomerForm1 = new System.Windows.Forms.Panel();
-            this.dashboard1 = new IM101.dashboard();
-            this.categories1 = new IM101.categories();
-            this.products1 = new IM101.products();
-            this.users1 = new IM101.users();
-            this.customers1 = new IM101.customers();
-            this.supplier1 = new IM101.supplier();
-            this.inventory1 = new IM101.inventory();
-            this.supply1 = new IM101.supply();
-            this.logs1 = new IM101.logs();
             this.supplier_btn = new System.Windows.Forms.Button();
             this.supply_btn = new System.Windows.Forms.Button();
             this.logout_btn = new System.Windows.Forms.Button();
@@ -60,6 +51,15 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
+            this.dashboard1 = new IM101.dashboard();
+            this.categories1 = new IM101.categories();
+            this.products1 = new IM101.products();
+            this.users1 = new IM101.users();
+            this.customers1 = new IM101.customers();
+            this.supplier1 = new IM101.supplier();
+            this.inventory1 = new IM101.inventory();
+            this.supply1 = new IM101.supply();
+            this.logs1 = new IM101.logs();
             this.cashierCustomerForm1.SuspendLayout();
             this.panel3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -87,69 +87,6 @@
             this.cashierCustomerForm1.Name = "cashierCustomerForm1";
             this.cashierCustomerForm1.Size = new System.Drawing.Size(1113, 512);
             this.cashierCustomerForm1.TabIndex = 10;
-            // 
-            // dashboard1
-            // 
-            this.dashboard1.Location = new System.Drawing.Point(-1, -3);
-            this.dashboard1.Name = "dashboard1";
-            this.dashboard1.Size = new System.Drawing.Size(1113, 512);
-            this.dashboard1.TabIndex = 8;
-            // 
-            // categories1
-            // 
-            this.categories1.Location = new System.Drawing.Point(-2, -2);
-            this.categories1.Name = "categories1";
-            this.categories1.Size = new System.Drawing.Size(1113, 512);
-            this.categories1.TabIndex = 7;
-            // 
-            // products1
-            // 
-            this.products1.Location = new System.Drawing.Point(-1, 1);
-            this.products1.Name = "products1";
-            this.products1.Size = new System.Drawing.Size(1113, 512);
-            this.products1.TabIndex = 6;
-            // 
-            // users1
-            // 
-            this.users1.Location = new System.Drawing.Point(-1, -2);
-            this.users1.Name = "users1";
-            this.users1.Size = new System.Drawing.Size(1113, 512);
-            this.users1.TabIndex = 5;
-            // 
-            // customers1
-            // 
-            this.customers1.Location = new System.Drawing.Point(-2, -2);
-            this.customers1.Name = "customers1";
-            this.customers1.Size = new System.Drawing.Size(1113, 512);
-            this.customers1.TabIndex = 4;
-            // 
-            // supplier1
-            // 
-            this.supplier1.Location = new System.Drawing.Point(3, 1);
-            this.supplier1.Name = "supplier1";
-            this.supplier1.Size = new System.Drawing.Size(1113, 513);
-            this.supplier1.TabIndex = 3;
-            // 
-            // inventory1
-            // 
-            this.inventory1.Location = new System.Drawing.Point(-2, -2);
-            this.inventory1.Name = "inventory1";
-            this.inventory1.Size = new System.Drawing.Size(1113, 512);
-            this.inventory1.TabIndex = 2;
-            // 
-            // supply1
-            // 
-            this.supply1.Location = new System.Drawing.Point(-2, -2);
-            this.supply1.Name = "supply1";
-            this.supply1.Size = new System.Drawing.Size(1113, 513);
-            this.supply1.TabIndex = 1;
-            // 
-            // logs1
-            // 
-            this.logs1.Location = new System.Drawing.Point(-2, -2);
-            this.logs1.Name = "logs1";
-            this.logs1.Size = new System.Drawing.Size(1113, 512);
-            this.logs1.TabIndex = 0;
             // 
             // supplier_btn
             // 
@@ -403,6 +340,7 @@
             this.Day.Size = new System.Drawing.Size(182, 18);
             this.Day.TabIndex = 6;
             this.Day.Text = "Wednesday, May 30, 2024";
+            this.Day.Click += new System.EventHandler(this.Day_Click);
             // 
             // panel1
             // 
@@ -426,6 +364,69 @@
             this.pictureBox2.TabIndex = 8;
             this.pictureBox2.TabStop = false;
             // 
+            // dashboard1
+            // 
+            this.dashboard1.Location = new System.Drawing.Point(-1, -3);
+            this.dashboard1.Name = "dashboard1";
+            this.dashboard1.Size = new System.Drawing.Size(1113, 512);
+            this.dashboard1.TabIndex = 8;
+            // 
+            // categories1
+            // 
+            this.categories1.Location = new System.Drawing.Point(-2, -2);
+            this.categories1.Name = "categories1";
+            this.categories1.Size = new System.Drawing.Size(1113, 512);
+            this.categories1.TabIndex = 7;
+            // 
+            // products1
+            // 
+            this.products1.Location = new System.Drawing.Point(-1, 1);
+            this.products1.Name = "products1";
+            this.products1.Size = new System.Drawing.Size(1113, 512);
+            this.products1.TabIndex = 6;
+            // 
+            // users1
+            // 
+            this.users1.Location = new System.Drawing.Point(-1, -2);
+            this.users1.Name = "users1";
+            this.users1.Size = new System.Drawing.Size(1113, 512);
+            this.users1.TabIndex = 5;
+            // 
+            // customers1
+            // 
+            this.customers1.Location = new System.Drawing.Point(-2, -2);
+            this.customers1.Name = "customers1";
+            this.customers1.Size = new System.Drawing.Size(1113, 512);
+            this.customers1.TabIndex = 4;
+            // 
+            // supplier1
+            // 
+            this.supplier1.Location = new System.Drawing.Point(3, 1);
+            this.supplier1.Name = "supplier1";
+            this.supplier1.Size = new System.Drawing.Size(1113, 513);
+            this.supplier1.TabIndex = 3;
+            // 
+            // inventory1
+            // 
+            this.inventory1.Location = new System.Drawing.Point(-2, -2);
+            this.inventory1.Name = "inventory1";
+            this.inventory1.Size = new System.Drawing.Size(1113, 512);
+            this.inventory1.TabIndex = 2;
+            // 
+            // supply1
+            // 
+            this.supply1.Location = new System.Drawing.Point(-2, -2);
+            this.supply1.Name = "supply1";
+            this.supply1.Size = new System.Drawing.Size(1113, 513);
+            this.supply1.TabIndex = 1;
+            // 
+            // logs1
+            // 
+            this.logs1.Location = new System.Drawing.Point(-2, -2);
+            this.logs1.Name = "logs1";
+            this.logs1.Size = new System.Drawing.Size(1113, 512);
+            this.logs1.TabIndex = 0;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -439,6 +440,7 @@
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Admin\'s Portal - Funtilon Hardware and Construction Supplies";
+            this.Load += new System.EventHandler(this.MainForm_Load);
             this.cashierCustomerForm1.ResumeLayout(false);
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();

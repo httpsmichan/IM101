@@ -247,9 +247,18 @@ namespace IM101
         private void staff_search_TextChanged(object sender, EventArgs e)
         {
             usersdata uData = new usersdata();
-            List<usersdata> filteredData = staff_search.Text == "Enter Staff ID" || string.IsNullOrWhiteSpace(staff_search.Text)
-                ? uData.AllUsersData()
-                : uData.SearchUsers(staff_search.Text.Trim());
+            List<usersdata> filteredData;
+
+            // Check if the search text is empty or contains the placeholder text
+            if (string.IsNullOrWhiteSpace(staff_search.Text) || staff_search.Text == "Enter Staff ID")
+            {
+                filteredData = uData.AllUsersData();
+            }
+            else
+            {
+                filteredData = uData.SearchUsers(staff_search.Text.Trim());
+            }
+
             adduser_dataGrid.DataSource = filteredData;
         }
 

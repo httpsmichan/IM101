@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace IM101
 {
@@ -30,13 +31,10 @@ namespace IM101
                 {
                     connect.Open();
 
-                    DateTime today = DateTime.Today;
-
                     string selectData = @"SELECT * FROM Payment";
 
                     using (SqlCommand cmd = new SqlCommand(selectData, connect))
                     {
-                        cmd.Parameters.AddWithValue("@date", today);
                         SqlDataReader reader = cmd.ExecuteReader();
 
                         while (reader.Read())
@@ -47,7 +45,9 @@ namespace IM101
                             cdata.TotalPrice = reader["TotalPrice"].ToString();
                             cdata.Amount = reader["Amount"].ToString();
                             cdata.Change = reader["Change"].ToString();
-                            cdata.Date = reader["OrderDate"].ToString();
+
+                            DateTime orderDate = Convert.ToDateTime(reader["OrderDate"]);
+                            cdata.Date = orderDate.ToString("yyyy-MM-dd");
 
                             listData.Add(cdata);
                         }
@@ -55,7 +55,7 @@ namespace IM101
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Failed Connection: " + ex);
+                    Console.WriteLine("Failed Connection: " + ex.Message);
                 }
                 finally
                 {
@@ -65,6 +65,7 @@ namespace IM101
 
             return listData;
         }
+
 
 
         public List<customersdata> allTodayCustomers()
@@ -77,25 +78,23 @@ namespace IM101
                 {
                     connect.Open();
 
-                    DateTime today = DateTime.Today;
-
-                    string selectData = "SELECT * FROM Payment WHERE OrderDate = @date";
+                    string selectData = @"SELECT * FROM Payment";
 
                     using (SqlCommand cmd = new SqlCommand(selectData, connect))
                     {
-                        cmd.Parameters.AddWithValue("@date", today);
                         SqlDataReader reader = cmd.ExecuteReader();
 
                         while (reader.Read())
                         {
                             customersdata cdata = new customersdata();
-
                             cdata.BillNo = reader["BillNo"].ToString();
                             cdata.CustomerID = reader["CustomerID"].ToString();
                             cdata.TotalPrice = reader["TotalPrice"].ToString();
                             cdata.Amount = reader["Amount"].ToString();
                             cdata.Change = reader["Change"].ToString();
-                            cdata.Date = reader["OrderDate"].ToString();
+
+                            DateTime orderDate = Convert.ToDateTime(reader["OrderDate"]);
+                            cdata.Date = orderDate.ToString("yyyy-MM-dd");
 
                             listData.Add(cdata);
                         }
@@ -103,7 +102,7 @@ namespace IM101
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Failed Connection: " + ex);
+                    Console.WriteLine("Failed Connection: " + ex.Message);
                 }
                 finally
                 {

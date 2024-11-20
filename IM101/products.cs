@@ -253,19 +253,6 @@ namespace IM101
 
                                 }
 
-                                string insertInventoryQuery = @"
-                            INSERT INTO Inventory (ProductID, Price, Date)
-                            VALUES (@prodID, @price, @date)";
-
-                                using (SqlCommand insertInventoryCmd = new SqlCommand(insertInventoryQuery, connect))
-                                {
-                                    insertInventoryCmd.Parameters.AddWithValue("@prodID", newProductId);
-                                    insertInventoryCmd.Parameters.AddWithValue("@price", addprod_price.Text.Trim());
-                                    insertInventoryCmd.Parameters.AddWithValue("@date", DateTime.Today);
-
-                                    insertInventoryCmd.ExecuteNonQuery();
-                                }
-
                                 clearFields();
                                 displayAllProducts();
                             }
@@ -290,17 +277,14 @@ namespace IM101
 
         private void addprod_dataGrid_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex != -1)
+            if (string.IsNullOrWhiteSpace(product_search.Text) || product_search.Text == "Search Product")
             {
-                DataGridViewRow row = addprod_dataGrid.Rows[e.RowIndex];
-
-                getID = (int)row.Cells[0].Value;
-
-                addprod_name.Text = row.Cells[1].Value.ToString();
-                addprod_category.Text = row.Cells[2].Value.ToString();
-                addprod_price.Text = row.Cells[3].Value.ToString();
-                addprod_status.Text = row.Cells[4].Value.ToString();
-
+                displayAllProducts();
+            }
+            else
+            {
+                product_search.Text = "Search Product";
+                product_search.ForeColor = Color.Gray;
             }
         }
 
@@ -357,7 +341,7 @@ namespace IM101
             productdata proddata = new productdata();
             List<productdata> filteredData;
 
-            if (string.IsNullOrWhiteSpace(product_search.Text))
+            if (string.IsNullOrWhiteSpace(product_search.Text) || product_search.Text == "Search Product")
             {
                 filteredData = proddata.AllProductsData();
             }

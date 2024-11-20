@@ -31,7 +31,7 @@ namespace IM101
                 {
                     SqlDataReader reader = cmd.ExecuteReader();
 
-                    if (reader.HasRows)  // Check if any rows are returned
+                    if (reader.HasRows) // Check if any rows are returned
                     {
                         while (reader.Read())
                         {
@@ -42,7 +42,9 @@ namespace IM101
                                 Category = reader["Category"].ToString(),
                                 Price = reader["Price"].ToString(),
                                 Status = reader["Status"].ToString(),
-                                Date = reader["Date"].ToString()
+
+                                // Format the date to show only the date portion
+                                Date = Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd")
                             };
                             listData.Add(proddata);
                         }
@@ -53,6 +55,7 @@ namespace IM101
                     }
                 }
             }
+
             return listData;
         }
 
@@ -61,8 +64,7 @@ namespace IM101
         {
             List<productdata> listData = new List<productdata>();
 
-            using (SqlConnection
-          connect = new SqlConnection(@"Data Source=SHINE;Initial Catalog=FuntilonDatabase;Integrated Security=True;Encrypt=True;TrustServerCertificate=True"))
+            using (SqlConnection connect = new SqlConnection(@"Data Source=SHINE;Initial Catalog=FuntilonDatabase;Integrated Security=True;Encrypt=True;TrustServerCertificate=True"))
             {
                 connect.Open();
 
@@ -75,38 +77,47 @@ namespace IM101
 
                     while (reader.Read())
                     {
-                        productdata proddata = new productdata();
-                        proddata.ProductID = (int)reader["ProductID"];
-                        proddata.ProductName = reader["ProductName"].ToString();
-                        proddata.Category = reader["Category"].ToString();
-                        proddata.Price = reader["Price"].ToString();
-                        proddata.Status = reader["Status"].ToString();
-                        proddata.Date = reader["Date"].ToString();
+                        productdata proddata = new productdata
+                        {
+                            ProductID = (int)reader["ProductID"],
+                            ProductName = reader["ProductName"].ToString(),
+                            Category = reader["Category"].ToString(),
+                            Price = reader["Price"].ToString(),
+                            Status = reader["Status"].ToString(),
 
+                            // Format the date to show only the date portion
+                            Date = Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd")
+                        };
 
                         listData.Add(proddata);
                     }
                 }
-
             }
+
             return listData;
         }
+
 
         public List<productdata> SearchProducts(string searchTerm)
         {
             List<productdata> listData = new List<productdata>();
 
-            using (SqlConnection
-         connect = new SqlConnection(@"Data Source=SHINE;Initial Catalog=FuntilonDatabase;Integrated Security=True;Encrypt=True;TrustServerCertificate=True"))
+            using (SqlConnection connect = new SqlConnection(@"Data Source=SHINE;Initial Catalog=FuntilonDatabase;Integrated Security=True;Encrypt=True;TrustServerCertificate=True"))
             {
                 connect.Open();
 
-                string selectData = "SELECT * FROM Product WHERE CAST(ProductID AS VARCHAR) LIKE @search OR ProductName LIKE @search OR Category LIKE @search";
-
+                // Updated query to include 'Status' in the search condition
+                string selectData = @"
+            SELECT * 
+            FROM Product 
+            WHERE CAST(ProductID AS VARCHAR) LIKE @search 
+               OR ProductName LIKE @search 
+               OR Category LIKE @search
+               OR Status LIKE @search";  // Added Status to the search
 
                 using (SqlCommand cmd = new SqlCommand(selectData, connect))
                 {
-                    cmd.Parameters.AddWithValue("@search", "%" + searchTerm + "%");
+                    cmd.Parameters.AddWithValue("@search", "%" + searchTerm + "%"); // Parameterized search term
 
                     SqlDataReader reader = cmd.ExecuteReader();
 
@@ -118,7 +129,7 @@ namespace IM101
                             ProductName = reader["ProductName"].ToString(),
                             Category = reader["Category"].ToString(),
                             Price = reader["Price"].ToString(),
-                            Status = reader["Status"].ToString(),
+                            Status = reader["Status"].ToString(),  // Now fetching Status
                             Date = reader["Date"].ToString()
                         };
 

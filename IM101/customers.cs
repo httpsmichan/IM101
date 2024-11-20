@@ -47,7 +47,7 @@ namespace IM101
             customersdata cData = new customersdata();
             List<customersdata> filteredData;
 
-            if (string.IsNullOrWhiteSpace(customer_search.Text))
+            if (string.IsNullOrWhiteSpace(customer_search.Text) || customer_search.Text == "Search Customer")
             {
                 filteredData = cData.allCustomers();
             }

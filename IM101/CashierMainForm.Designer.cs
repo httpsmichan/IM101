@@ -43,15 +43,15 @@
             this.dashboard_btn = new System.Windows.Forms.Button();
             this.cashier = new System.Windows.Forms.Label();
             this.cashierCustomerForm1 = new System.Windows.Forms.Panel();
+            this.dashboard1 = new IM101.dashboard();
+            this.categories1 = new IM101.categories();
+            this.products1 = new IM101.products();
+            this.orders1 = new IM101.orders();
+            this.placeorder1 = new IM101.placeorder();
+            this.customers1 = new IM101.customers();
             this.panel3 = new System.Windows.Forms.Panel();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.pictureBox4 = new System.Windows.Forms.PictureBox();
-            this.customers1 = new IM101.customers();
-            this.placeorder1 = new IM101.placeorder();
-            this.orders1 = new IM101.orders();
-            this.products1 = new IM101.products();
-            this.categories1 = new IM101.categories();
-            this.dashboard1 = new IM101.dashboard();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel2.SuspendLayout();
@@ -104,6 +104,7 @@
             this.Day.Size = new System.Drawing.Size(182, 18);
             this.Day.TabIndex = 6;
             this.Day.Text = "Wednesday, May 30, 2024";
+            this.Day.Click += new System.EventHandler(this.Day_Click);
             // 
             // placeorder_btn
             // 
@@ -265,6 +266,48 @@
             this.cashierCustomerForm1.Size = new System.Drawing.Size(1113, 515);
             this.cashierCustomerForm1.TabIndex = 14;
             // 
+            // dashboard1
+            // 
+            this.dashboard1.Location = new System.Drawing.Point(-2, -2);
+            this.dashboard1.Name = "dashboard1";
+            this.dashboard1.Size = new System.Drawing.Size(1113, 512);
+            this.dashboard1.TabIndex = 5;
+            // 
+            // categories1
+            // 
+            this.categories1.Location = new System.Drawing.Point(-2, -2);
+            this.categories1.Name = "categories1";
+            this.categories1.Size = new System.Drawing.Size(1113, 512);
+            this.categories1.TabIndex = 4;
+            // 
+            // products1
+            // 
+            this.products1.Location = new System.Drawing.Point(-2, -4);
+            this.products1.Name = "products1";
+            this.products1.Size = new System.Drawing.Size(1113, 512);
+            this.products1.TabIndex = 3;
+            // 
+            // orders1
+            // 
+            this.orders1.Location = new System.Drawing.Point(-33, -9);
+            this.orders1.Name = "orders1";
+            this.orders1.Size = new System.Drawing.Size(1113, 512);
+            this.orders1.TabIndex = 2;
+            // 
+            // placeorder1
+            // 
+            this.placeorder1.Location = new System.Drawing.Point(-2, -2);
+            this.placeorder1.Name = "placeorder1";
+            this.placeorder1.Size = new System.Drawing.Size(1113, 513);
+            this.placeorder1.TabIndex = 1;
+            // 
+            // customers1
+            // 
+            this.customers1.Location = new System.Drawing.Point(-2, -2);
+            this.customers1.Name = "customers1";
+            this.customers1.Size = new System.Drawing.Size(1113, 512);
+            this.customers1.TabIndex = 0;
+            // 
             // panel3
             // 
             this.panel3.BackColor = System.Drawing.Color.White;
@@ -296,48 +339,6 @@
             this.pictureBox4.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox4.TabIndex = 5;
             this.pictureBox4.TabStop = false;
-            // 
-            // customers1
-            // 
-            this.customers1.Location = new System.Drawing.Point(-2, -2);
-            this.customers1.Name = "customers1";
-            this.customers1.Size = new System.Drawing.Size(1113, 512);
-            this.customers1.TabIndex = 0;
-            // 
-            // placeorder1
-            // 
-            this.placeorder1.Location = new System.Drawing.Point(-2, -2);
-            this.placeorder1.Name = "placeorder1";
-            this.placeorder1.Size = new System.Drawing.Size(1113, 513);
-            this.placeorder1.TabIndex = 1;
-            // 
-            // orders1
-            // 
-            this.orders1.Location = new System.Drawing.Point(-33, -9);
-            this.orders1.Name = "orders1";
-            this.orders1.Size = new System.Drawing.Size(1113, 512);
-            this.orders1.TabIndex = 2;
-            // 
-            // products1
-            // 
-            this.products1.Location = new System.Drawing.Point(-2, -4);
-            this.products1.Name = "products1";
-            this.products1.Size = new System.Drawing.Size(1113, 512);
-            this.products1.TabIndex = 3;
-            // 
-            // categories1
-            // 
-            this.categories1.Location = new System.Drawing.Point(-2, -2);
-            this.categories1.Name = "categories1";
-            this.categories1.Size = new System.Drawing.Size(1113, 512);
-            this.categories1.TabIndex = 4;
-            // 
-            // dashboard1
-            // 
-            this.dashboard1.Location = new System.Drawing.Point(-2, -2);
-            this.dashboard1.Name = "dashboard1";
-            this.dashboard1.Size = new System.Drawing.Size(1113, 512);
-            this.dashboard1.TabIndex = 5;
             // 
             // CashierMainForm
             // 

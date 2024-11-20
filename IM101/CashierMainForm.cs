@@ -144,5 +144,9 @@ namespace IM101
             Day.Text = formattedDate;
         }
 
+        private void Day_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

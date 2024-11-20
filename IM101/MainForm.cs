@@ -174,5 +174,19 @@ namespace IM101
         {
 
         }
+
+        private void Day_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            DateTime currentDate = DateTime.Now;
+
+            string formattedDate = currentDate.ToString("dddd, MMMM d, yyyy");
+
+            Day.Text = formattedDate;
+        }
     }
 }

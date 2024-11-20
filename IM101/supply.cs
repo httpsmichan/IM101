@@ -77,6 +77,7 @@ namespace IM101
             supply_unitcost.Text = "";
             supply_totalcost.Text = "";
             supply_status.Text = "";
+            supply_supplierID.Text = "";
         }
 
         private void supply_grid_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -115,7 +116,7 @@ namespace IM101
                 // Ensure the connection is open before starting any SQL commands
                 if (connect.State != ConnectionState.Open)
                 {
-                    connect.Open(); 
+                    connect.Open();
                 }
 
                 // Check if product exists in Product table
@@ -149,18 +150,21 @@ namespace IM101
                     }
                 }
 
-                // Log the inventory update before inserting into Inventory
-                if (supply_status.SelectedItem.ToString() == "Received")
+                // Handle the status and logging logic
+                string status = supply_status.SelectedItem == null ? "Order Placed" : supply_status.SelectedItem.ToString();
+
+                if (status == "Received")
                 {
+                    // Log the inventory update for "Received"
                     InsertLogEntry(connect, supply_prodID.Text, supply_qtys.Text, "Supply Received");
                 }
                 else
                 {
-                    MessageBox.Show("The status is not 'Received'. Current value: " + supply_status.SelectedItem.ToString());
-                    return; 
+                    // Insert the order with "Order Placed" status if not "Received"
+                    status = "Order Placed"; // Set status to "Order Placed"
                 }
 
-                // Insert supply data into the Supply table
+                // Insert supply data into the Supply table with the correct status
                 string insertQuery = "INSERT INTO Supply (ProductID, ProductName, QtySupplied, UnitCost, TotalCost, SupplierID, Status, SupplyDate) " +
                                      "VALUES (@ProductID, @ProductName, @Quantity, @UnitCost, @TotalCost, @SupplierID, @Status, @Date)";
 
@@ -172,7 +176,7 @@ namespace IM101
                     command.Parameters.AddWithValue("@UnitCost", supply_unitcost.Text);
                     command.Parameters.AddWithValue("@TotalCost", supply_totalcost.Text);
                     command.Parameters.AddWithValue("@SupplierID", supply_supplierID.Text);
-                    command.Parameters.AddWithValue("@Status", supply_status.SelectedItem == null ? (object)DBNull.Value : supply_status.SelectedItem.ToString());
+                    command.Parameters.AddWithValue("@Status", status); // Insert the correct status ("Order Placed" or "Received")
                     command.Parameters.AddWithValue("@Date", DateTime.Today);
 
                     command.ExecuteNonQuery(); // Execute the insert query for Supply
@@ -197,7 +201,7 @@ namespace IM101
                 // Ensure that the connection is closed at the end of the process.
                 if (connect.State == ConnectionState.Open)
                 {
-                    connect.Close(); 
+                    connect.Close();
                 }
 
                 DisplayAllSupplies(); // Refresh UI or data view
@@ -210,22 +214,45 @@ namespace IM101
             {
                 if (connection.State != ConnectionState.Open)
                 {
-                    connection.Open(); 
+                    connection.Open();
                 }
 
+                // Query to get the price from the Product table using productID
+                string getPriceQuery = "SELECT Price FROM Product WHERE ProductID = @ProductID";
+
+                double price = unitCost; // Use the provided unit cost (or get from Product table if needed)
+
+                using (SqlCommand priceCommand = new SqlCommand(getPriceQuery, connection))
+                {
+                    priceCommand.Parameters.AddWithValue("@ProductID", productID);
+
+                    // Execute the query and get the price
+                    var result = priceCommand.ExecuteScalar();
+                    if (result != DBNull.Value)
+                    {
+                        price = Convert.ToDouble(result); // Convert the result to double
+                    }
+                    else
+                    {
+                        MessageBox.Show("Product not found or price is unavailable.");
+                        return; // Exit if no price found
+                    }
+                }
+
+                // Now insert into the Inventory table with the fetched price
                 string insertInventoryQuery = "INSERT INTO Inventory (ProductID, ProductName, Price, Stocks, Amount, Date) " +
-                                               "VALUES (@ProductID, @ProductName, @Price, @Stocks, @Amount, @Date)";
+                                              "VALUES (@ProductID, @ProductName, @Price, @Stocks, @Amount, @Date)";
 
                 using (SqlCommand inventoryCommand = new SqlCommand(insertInventoryQuery, connection))
                 {
                     inventoryCommand.Parameters.AddWithValue("@ProductID", productID);
                     inventoryCommand.Parameters.AddWithValue("@ProductName", productName);
-                    inventoryCommand.Parameters.AddWithValue("@Price", unitCost); 
+                    inventoryCommand.Parameters.AddWithValue("@Price", price); // Use the fetched price here
                     inventoryCommand.Parameters.AddWithValue("@Stocks", quantitySupplied);
                     inventoryCommand.Parameters.AddWithValue("@Amount", "pcs");
                     inventoryCommand.Parameters.AddWithValue("@Date", DateTime.Today);
 
-                    inventoryCommand.ExecuteNonQuery(); 
+                    inventoryCommand.ExecuteNonQuery();
                 }
 
                 Console.WriteLine("Inventory data inserted successfully!");
@@ -235,6 +262,7 @@ namespace IM101
                 MessageBox.Show("Error inserting inventory: " + ex.Message);
             }
         }
+
 
         private void InsertLogEntry(SqlConnection connection, string productID, string quantitySupplied, string actionType)
         {
@@ -470,7 +498,7 @@ namespace IM101
             supplydatas iData = new supplydatas();
             List<supplydatas> filteredData;
 
-            if (string.IsNullOrWhiteSpace(supply_search.Text))
+            if (string.IsNullOrWhiteSpace(supply_search.Text) || supply_search.Text == "Search Product")
             {
                 filteredData = iData.AllSupplyData();
             }

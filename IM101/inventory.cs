@@ -96,7 +96,7 @@ namespace IM101
                     int prevStock = 0;
                     int newStock = 0;
 
-                    // Check if product exists or insert new product
+                    // Check if the product exists
                     using (SqlCommand cmd = new SqlCommand(selectProductQuery, connect))
                     {
                         cmd.Parameters.AddWithValue("@prodName", inventory_prodname.Text.Trim());
@@ -105,23 +105,14 @@ namespace IM101
                         {
                             if (reader.Read())
                             {
+                                // If the product exists, get the ProductID
                                 productID = Convert.ToInt32(reader["ProductID"]);
                             }
                             else
                             {
-                                // Insert into Product table if product doesn't exist
-                                string insertProductQuery = @"
-                            INSERT INTO Product (ProductName, Price)
-                            OUTPUT INSERTED.ProductID
-                            VALUES (@prodName, @price)";
-
-                                reader.Close();
-                                using (SqlCommand insertProductCmd = new SqlCommand(insertProductQuery, connect))
-                                {
-                                    insertProductCmd.Parameters.AddWithValue("@prodName", inventory_prodname.Text.Trim());
-                                    insertProductCmd.Parameters.AddWithValue("@price", inventory_price.Text.Trim());
-                                    productID = (int)insertProductCmd.ExecuteScalar();
-                                }
+                                // If the product doesn't exist, show an error and return
+                                MessageBox.Show("Product does not exist!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return;
                             }
                         }
                     }
@@ -143,8 +134,8 @@ namespace IM101
 
                     // Insert a new row into the Inventory table
                     string insertInventoryQuery = @"
-                INSERT INTO Inventory (ProductID, Price, Stocks, Amount, Date)
-                VALUES (@prodID, @price, @stocks, @amount, @date)";
+        INSERT INTO Inventory (ProductID, Price, Stocks, Amount, Date)
+        VALUES (@prodID, @price, @stocks, @amount, @date)";
 
                     using (SqlCommand insertInventoryCmd = new SqlCommand(insertInventoryQuery, connect))
                     {
@@ -159,8 +150,8 @@ namespace IM101
 
                     // Insert into Logs table
                     string insertLogQuery = @"
-                INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Date)
-                VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @date)";
+        INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Date)
+        VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @date)";
 
                     using (SqlCommand insertLogCmd = new SqlCommand(insertLogQuery, connect))
                     {
@@ -334,7 +325,48 @@ namespace IM101
 
         private void inventory_upbtn_Click(object sender, EventArgs e)
         {
-            
+            if (EmptyFields())
+            {
+                MessageBox.Show("Empty Fields", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                if (MessageBox.Show("Are you sure you want to Update Product ID: " +
+                    getID.ToString() + "?", "Confirmation Message", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    if (checkConnection())
+                    {
+                        try
+                        {
+                            connect.Open();
+
+                            string updateData = "UPDATE Inventory SET Amount = @am WHERE ProductID = @prodID";
+
+                            using (SqlCommand updateD = new SqlCommand(updateData, connect))
+                            {
+                                updateD.Parameters.AddWithValue("@am", inventory_am.Text.Trim());
+
+                                updateD.Parameters.AddWithValue("@prodID", getID);
+
+                                updateD.ExecuteNonQuery();
+
+                                clearFields();
+                                DisplayAllProducts();
+
+                                MessageBox.Show("Product updated successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show("Failed to update the product: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        finally
+                        {
+                            connect.Close();
+                        }
+                    }
+                }
+            }
         }
 
         private void inventory_Load(object sender, EventArgs e)
@@ -350,7 +382,8 @@ namespace IM101
             inventorydata iData = new inventorydata();
             List<inventorydata> filteredData;
 
-            if (string.IsNullOrWhiteSpace(inventory_search.Text))
+            // Check if the search text is empty or contains the placeholder text
+            if (string.IsNullOrWhiteSpace(inventory_search.Text) || inventory_search.Text == "Search Inventory")
             {
                 filteredData = iData.AllInventoryData();
             }

@@ -22,7 +22,7 @@ namespace IM101
         public decimal UnitCost { get; set; }
         public decimal TotalCost { get; set; }
         public string Status { get; set; }
-        public DateTime SupplyDate { get; set; }
+        public string SupplyDate { get; set; }
 
         public List<supplydatas> AllSupplyData()
         {
@@ -49,9 +49,15 @@ namespace IM101
                                     QtySupplied = reader.IsDBNull(reader.GetOrdinal("QtySupplied")) ? 0 : reader.GetInt32(reader.GetOrdinal("QtySupplied")),
                                     UnitCost = reader.IsDBNull(reader.GetOrdinal("UnitCost")) ? 0 : reader.GetDecimal(reader.GetOrdinal("UnitCost")),
                                     TotalCost = reader.IsDBNull(reader.GetOrdinal("TotalCost")) ? 0 : reader.GetDecimal(reader.GetOrdinal("TotalCost")),
-                                    SupplyDate = reader.IsDBNull(reader.GetOrdinal("SupplyDate")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("SupplyDate")),
+
+                                    // Handle null SupplyDate and format it
+                                    SupplyDate = reader.IsDBNull(reader.GetOrdinal("SupplyDate"))
+                                        ? DateTime.MinValue.ToString("yyyy-MM-dd")
+                                        : reader.GetDateTime(reader.GetOrdinal("SupplyDate")).ToString("yyyy-MM-dd"),
+
                                     Status = reader.IsDBNull(reader.GetOrdinal("Status")) ? string.Empty : reader.GetString(reader.GetOrdinal("Status"))
                                 };
+
                                 listData.Add(data);
                             }
                         }
@@ -69,6 +75,7 @@ namespace IM101
             return listData;
         }
 
+
         public List<supplydatas> SearchSupply(string searchTerm)
         {
             List<supplydatas> listData = new List<supplydatas>();
@@ -79,9 +86,9 @@ namespace IM101
                     connect.Open();
 
                 string searchQuery = @"
-                    SELECT SupplyID, SupplierID, ProductID, ProductName, QtySupplied, UnitCost, TotalCost, SupplyDate, Status 
-                    FROM Supply 
-                    WHERE ProductName LIKE @searchTerm OR ProductName LIKE @searchTerm";
+            SELECT SupplyID, SupplierID, ProductID, ProductName, QtySupplied, UnitCost, TotalCost, SupplyDate, Status 
+            FROM Supply 
+            WHERE ProductName LIKE @searchTerm OR ProductName LIKE @searchTerm";
 
                 using (SqlCommand cmd = new SqlCommand(searchQuery, connect))
                 {
@@ -100,7 +107,12 @@ namespace IM101
                             QtySupplied = reader.IsDBNull(reader.GetOrdinal("QtySupplied")) ? 0 : reader.GetInt32(reader.GetOrdinal("QtySupplied")),
                             UnitCost = reader.IsDBNull(reader.GetOrdinal("UnitCost")) ? 0 : reader.GetDecimal(reader.GetOrdinal("UnitCost")),
                             TotalCost = reader.IsDBNull(reader.GetOrdinal("TotalCost")) ? 0 : reader.GetDecimal(reader.GetOrdinal("TotalCost")),
-                            SupplyDate = reader.IsDBNull(reader.GetOrdinal("SupplyDate")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("SupplyDate")),
+
+                            SupplyDate = reader.IsDBNull(reader.GetOrdinal("SupplyDate"))
+                                        ? string.Empty 
+                                        : reader.GetDateTime(reader.GetOrdinal("SupplyDate")).ToString("yyyy-MM-dd"), 
+
+
                             Status = reader.IsDBNull(reader.GetOrdinal("Status")) ? string.Empty : reader.GetString(reader.GetOrdinal("Status")),
                         };
 
@@ -119,5 +131,6 @@ namespace IM101
 
             return listData;
         }
+
     }
 }

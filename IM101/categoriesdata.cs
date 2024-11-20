@@ -34,13 +34,16 @@ namespace IM101
                         categoriesdata cdata = new categoriesdata();
                         cdata.CategoriesID = (int)reader["categoryid"];
                         cdata.Category = reader["category"].ToString();
-                        cdata.Date = reader["date"].ToString();
+
+
+                        DateTime dateValue = Convert.ToDateTime(reader["date"]);
+                        cdata.Date = dateValue.ToString("yyyy-MM-dd");
 
                         listData.Add(cdata);
                     }
                 }
-
             }
+
             return listData;
         }
 
@@ -54,10 +57,15 @@ namespace IM101
                 {
                     connect.Open();
 
-                    // Use LIKE for partial matching on category, and check if searchTerm matches categoryid exactly
-                    string selectData = "SELECT * FROM Category WHERE category LIKE @search OR CAST(categoryid AS VARCHAR) = @searchExact";
+                    // Use LIKE for partial matching on category, and check if searchTerm matches categoryid exactly (by casting)
+                    string selectData = @"
+                SELECT * 
+                FROM Category 
+                WHERE category LIKE @search OR 
+                      CAST(categoryid AS VARCHAR) = @searchExact";
                     using (SqlCommand cmd = new SqlCommand(selectData, connect))
                     {
+                        // Define parameters for the search term
                         cmd.Parameters.AddWithValue("@search", "%" + searchTerm + "%");
                         cmd.Parameters.AddWithValue("@searchExact", searchTerm); // Exact match for categoryid
 

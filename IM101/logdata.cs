@@ -16,7 +16,7 @@ namespace IM101
         public int? PrevStock { get; set; } 
         public int? NewStock { get; set; } 
         public string Staff { get; set; } 
-        public DateTime Date { get; set; }
+        public string Date { get; set; }
 
 
         public List<logdata> GetAllLogs()
@@ -45,8 +45,11 @@ namespace IM101
                             PrevStock = reader["PrevStock"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["PrevStock"]),
                             NewStock = reader["NewStock"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["NewStock"]),
                             Staff = reader["Staff"] == DBNull.Value ? null : reader["Staff"].ToString(),
-                            Date = Convert.ToDateTime(reader["Date"])
-                        };
+                            Date = reader.IsDBNull(reader.GetOrdinal("Date"))
+                                    ? string.Empty 
+                                    : Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd") 
+
+                    };
 
                         listData.Add(log);
                     }
