@@ -47,16 +47,17 @@ namespace IM101
             customersdata cData = new customersdata();
             List<customersdata> filteredData;
 
-            if (string.IsNullOrWhiteSpace(customer_search.Text) || customer_search.Text == "Search Customer")
+            // Check if the search text is empty or contains the placeholder text
+            if (string.IsNullOrWhiteSpace(customer_search.Text) || customer_search.Text == "Search CustomerID")
             {
-                filteredData = cData.allCustomers();
+                filteredData = cData.allCustomers(); // Show all customers if search is empty or placeholder
             }
             else
             {
-                filteredData = cData.SearchCustomers(customer_search.Text.Trim());
+                filteredData = cData.SearchCustomers(customer_search.Text.Trim()); // Filter customers based on search term
             }
 
-            dataGridView_Customers.DataSource = filteredData;
+            dataGridView_Customers.DataSource = filteredData; // Update the DataGrid with filtered data
         }
 
         private void customer_search_Leave(object sender, EventArgs e)
@@ -64,16 +65,21 @@ namespace IM101
             if (string.IsNullOrWhiteSpace(customer_search.Text))
             {
                 customer_search.Text = "Search CustomerID";
-                customer_search.ForeColor = Color.Gray;
+                customer_search.ForeColor = Color.Gray; // Set the color to gray for placeholder
+            }
+            else
+            {
+                customer_search.ForeColor = Color.Black; // Set text color to black if there's input
             }
         }
 
         private void customer_search_Enter(object sender, EventArgs e)
         {
+            // Clear the placeholder text when focusing on the search field
             if (customer_search.Text == "Search CustomerID")
             {
                 customer_search.Text = "";
-                customer_search.ForeColor = Color.Black;
+                customer_search.ForeColor = Color.Black; // Set the text color to black while typing
             }
         }
 

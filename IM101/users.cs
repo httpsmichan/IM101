@@ -250,16 +250,16 @@ namespace IM101
             List<usersdata> filteredData;
 
             // Check if the search text is empty or contains the placeholder text
-            if (string.IsNullOrWhiteSpace(staff_search.Text) || staff_search.Text == "Enter Staff ID")
+            if (string.IsNullOrWhiteSpace(staff_search.Text) || staff_search.Text == "Search StaffID or Username")
             {
-                filteredData = uData.AllUsersData();
+                filteredData = uData.AllUsersData(); // Show all users if search is empty or placeholder
             }
             else
             {
-                filteredData = uData.SearchUsers(staff_search.Text.Trim());
+                filteredData = uData.SearchUsers(staff_search.Text.Trim()); // Filter users based on search term
             }
 
-            adduser_dataGrid.DataSource = filteredData;
+            adduser_dataGrid.DataSource = filteredData; // Update the DataGrid with filtered data
         }
 
         private void staff_search_Leave(object sender, EventArgs e)
@@ -267,16 +267,21 @@ namespace IM101
             if (string.IsNullOrWhiteSpace(staff_search.Text))
             {
                 staff_search.Text = "Search StaffID or Username";
-                staff_search.ForeColor = Color.Gray;
+                staff_search.ForeColor = Color.Gray; // Set the color to gray for placeholder
+            }
+            else
+            {
+                staff_search.ForeColor = Color.Black; // Set text color to black if there's input
             }
         }
 
         private void staff_search_Enter(object sender, EventArgs e)
         {
+            // Clear the placeholder text when focusing on the search field
             if (staff_search.Text == "Search StaffID or Username")
             {
                 staff_search.Text = "";
-                staff_search.ForeColor = Color.Black;
+                staff_search.ForeColor = Color.Black; // Set the text color to black while typing
             }
         }
 

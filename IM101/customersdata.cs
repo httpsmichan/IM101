@@ -19,7 +19,7 @@ namespace IM101
         public string TotalPrice { get; set; }
         public string Amount { get; set; }
         public string Change { get; set; }
-        public string Date { get; set; }
+        public DateTime Date { get; set; }
 
         public List<customersdata> allCustomers()
         {
@@ -47,7 +47,7 @@ namespace IM101
                             cdata.Change = reader["Change"].ToString();
 
                             DateTime orderDate = Convert.ToDateTime(reader["OrderDate"]);
-                            cdata.Date = orderDate.ToString("yyyy-MM-dd");
+                            cdata.Date = orderDate;
 
                             listData.Add(cdata);
                         }
@@ -78,7 +78,9 @@ namespace IM101
                 {
                     connect.Open();
 
-                    string selectData = @"SELECT * FROM Payment";
+                    string selectData = @"
+                SELECT * FROM Payment
+                WHERE CAST(OrderDate AS DATE) = CAST(GETDATE() AS DATE)";  
 
                     using (SqlCommand cmd = new SqlCommand(selectData, connect))
                     {
@@ -94,7 +96,7 @@ namespace IM101
                             cdata.Change = reader["Change"].ToString();
 
                             DateTime orderDate = Convert.ToDateTime(reader["OrderDate"]);
-                            cdata.Date = orderDate.ToString("yyyy-MM-dd");
+                            cdata.Date = orderDate;
 
                             listData.Add(cdata);
                         }
@@ -112,6 +114,7 @@ namespace IM101
 
             return listData;
         }
+
 
         public List<customersdata> SearchCustomers(string searchTerm)
         {
@@ -143,7 +146,7 @@ namespace IM101
                             TotalPrice = reader["TotalPrice"].ToString(),
                             Amount = reader["Amount"].ToString(),
                             Change = reader["Change"].ToString(),
-                            Date = reader["OrderDate"].ToString()
+                            Date = Convert.ToDateTime(reader["OrderDate"])
                         };
 
                         listData.Add(cdata);

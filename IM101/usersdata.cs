@@ -59,7 +59,7 @@ namespace IM101
             {
                 connect.Open();
 
-                string selectData = "SELECT * FROM Staff WHERE Username LIKE @search OR StaffID LIKE @search";
+                string selectData = "SELECT * FROM Staff WHERE Username LIKE @search OR StaffID LIKE @search OR Role LIKE @search";
 
                 using (SqlCommand cmd = new SqlCommand(selectData, connect))
                 {
@@ -87,5 +87,6 @@ namespace IM101
 
             return listData;
         }
+
     }
 }

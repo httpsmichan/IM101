@@ -57,9 +57,10 @@ namespace IM101
                     connect.Open();
 
                 string searchQuery = @"
-                    SELECT SupplierID, SupplierName, MobileNumber, Email
-                    FROM Supplier
-                    WHERE SupplierName LIKE @searchTerm OR SupplierName LIKE @searchTerm";
+            SELECT SupplierID, SupplierName, MobileNumber, Email
+            FROM Supplier
+            WHERE SupplierName LIKE @searchTerm 
+            OR SupplierID LIKE @searchTerm";
 
                 using (SqlCommand cmd = new SqlCommand(searchQuery, connect))
                 {
@@ -75,7 +76,6 @@ namespace IM101
                             SupplierName = reader.GetString(reader.GetOrdinal("SupplierName")),
                             MobileNumber = reader.GetString(reader.GetOrdinal("MobileNumber")),
                             Email = reader.GetString(reader.GetOrdinal("Email")),
-
                         };
 
                         listData.Add(data);
@@ -93,5 +93,6 @@ namespace IM101
 
             return listData;
         }
+
     }
 }

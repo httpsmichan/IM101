@@ -104,41 +104,52 @@ namespace IM101
 
             using (SqlConnection connect = new SqlConnection(@"Data Source=SHINE;Initial Catalog=FuntilonDatabase;Integrated Security=True;Encrypt=True;TrustServerCertificate=True"))
             {
-                connect.Open();
-
-                // Updated query to include 'Status' in the search condition
-                string selectData = @"
-            SELECT * 
-            FROM Product 
-            WHERE CAST(ProductID AS VARCHAR) LIKE @search 
-               OR ProductName LIKE @search 
-               OR Category LIKE @search
-               OR Status LIKE @search";  // Added Status to the search
-
-                using (SqlCommand cmd = new SqlCommand(selectData, connect))
+                try
                 {
-                    cmd.Parameters.AddWithValue("@search", "%" + searchTerm + "%"); // Parameterized search term
+                    connect.Open();
 
-                    SqlDataReader reader = cmd.ExecuteReader();
+                    // Ensure that you are searching correctly across different fields
+                    string selectData = @"
+                SELECT * 
+                FROM Product 
+                WHERE CAST(ProductID AS VARCHAR) LIKE @search 
+                OR ProductName LIKE @search 
+                OR Category LIKE @search
+                OR Status LIKE @search";
 
-                    while (reader.Read())
+                    using (SqlCommand cmd = new SqlCommand(selectData, connect))
                     {
-                        productdata proddata = new productdata
-                        {
-                            ProductID = (int)reader["ProductID"],
-                            ProductName = reader["ProductName"].ToString(),
-                            Category = reader["Category"].ToString(),
-                            Price = reader["Price"].ToString(),
-                            Status = reader["Status"].ToString(),  // Now fetching Status
-                            Date = reader["Date"].ToString()
-                        };
+                        cmd.Parameters.AddWithValue("@search", "%" + searchTerm + "%"); // Secure parameterized query
 
-                        listData.Add(proddata);
+                        SqlDataReader reader = cmd.ExecuteReader();
+
+                        while (reader.Read())
+                        {
+                            productdata proddata = new productdata
+                            {
+                                // Use null checks to safely extract values
+                                ProductID = reader["ProductID"] != DBNull.Value ? Convert.ToInt32(reader["ProductID"]) : 0,
+                                ProductName = reader["ProductName"] != DBNull.Value ? reader["ProductName"].ToString() : string.Empty,
+                                Category = reader["Category"] != DBNull.Value ? reader["Category"].ToString() : string.Empty,
+                                Price = reader["Price"] != DBNull.Value ? reader["Price"].ToString() : "0",  // Price can default to "0" if null
+                                Status = reader["Status"] != DBNull.Value ? reader["Status"].ToString() : "Unknown",  // Default to "Unknown"
+                                Date = reader["Date"] != DBNull.Value ? Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd") : "N/A"  // Format Date or return "N/A"
+                            };
+
+                            listData.Add(proddata);
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    // Catch and display detailed errors
+                    MessageBox.Show("Error while searching products: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
 
             return listData;
         }
+
+
     }
 }

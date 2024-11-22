@@ -32,7 +32,6 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.supply_supplierID = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.supply_upbtn = new System.Windows.Forms.Button();
             this.remove_removebtn = new System.Windows.Forms.Button();
             this.supply_clearbtn = new System.Windows.Forms.Button();
             this.supply_addbtn = new System.Windows.Forms.Button();
@@ -81,18 +80,6 @@
             this.label9.TabIndex = 50;
             this.label9.Text = "Supplier ID";
             // 
-            // supply_upbtn
-            // 
-            this.supply_upbtn.BackColor = System.Drawing.Color.Firebrick;
-            this.supply_upbtn.ForeColor = System.Drawing.Color.White;
-            this.supply_upbtn.Location = new System.Drawing.Point(107, 397);
-            this.supply_upbtn.Name = "supply_upbtn";
-            this.supply_upbtn.Size = new System.Drawing.Size(90, 38);
-            this.supply_upbtn.TabIndex = 63;
-            this.supply_upbtn.Text = "Update";
-            this.supply_upbtn.UseVisualStyleBackColor = false;
-            this.supply_upbtn.Click += new System.EventHandler(this.supply_upbtn_Click);
-            // 
             // remove_removebtn
             // 
             this.remove_removebtn.BackColor = System.Drawing.Color.Firebrick;
@@ -123,7 +110,7 @@
             this.supply_addbtn.ForeColor = System.Drawing.Color.White;
             this.supply_addbtn.Location = new System.Drawing.Point(11, 397);
             this.supply_addbtn.Name = "supply_addbtn";
-            this.supply_addbtn.Size = new System.Drawing.Size(90, 38);
+            this.supply_addbtn.Size = new System.Drawing.Size(186, 38);
             this.supply_addbtn.TabIndex = 60;
             this.supply_addbtn.Text = "Add";
             this.supply_addbtn.UseVisualStyleBackColor = false;
@@ -331,7 +318,6 @@
             this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.panel2.Controls.Add(this.supply_supplierID);
             this.panel2.Controls.Add(this.label9);
-            this.panel2.Controls.Add(this.supply_upbtn);
             this.panel2.Controls.Add(this.remove_removebtn);
             this.panel2.Controls.Add(this.supply_clearbtn);
             this.panel2.Controls.Add(this.supply_addbtn);
@@ -389,7 +375,6 @@
 
         private System.Windows.Forms.TextBox supply_supplierID;
         private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.Button supply_upbtn;
         private System.Windows.Forms.Button remove_removebtn;
         private System.Windows.Forms.Button supply_clearbtn;
         private System.Windows.Forms.Button supply_addbtn;

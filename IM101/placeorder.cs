@@ -236,67 +236,191 @@ namespace IM101
 
         private void InsertLogsAndUpdateInventory(SqlConnection connection, Dictionary<int, int> productAggregates, DateTime today, int billNo)
         {
-            try
+            foreach (var entry in productAggregates)
             {
-                using (var cmd = new SqlCommand("InsertLogsAndUpdateInventory", connection))
+                int productID = entry.Key;
+                int totalQuantityChange = entry.Value;
+                // Fetch the current stock from the inventory
+                int prevStock = GetCurrentStock(connection, productID);
+                int newStock = prevStock - totalQuantityChange; // Calculate the new stock
+                // Log the transaction with correct prev and new stock values
+                string insertLogQuery = "INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Date) " +
+                                        "VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @date)";
+                using (var cmdLog = new SqlCommand(insertLogQuery, connection))
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue("@CustomerID", idGen);
-                    cmd.Parameters.AddWithValue("@BillNo", billNo);
-                    cmd.Parameters.AddWithValue("@Today", today);
                     string username = Form1.username.Substring(0, 1).ToUpper() + Form1.username.Substring(1).ToLower();
-                    cmd.Parameters.AddWithValue("@StaffName", "@" + username);
 
-                    cmd.ExecuteNonQuery();
+                    cmdLog.Parameters.AddWithValue("@actionType", "Order Purchase");
+                    cmdLog.Parameters.AddWithValue("@prodID", productID);
+                    cmdLog.Parameters.AddWithValue("@quantityChange", -totalQuantityChange); // Negative for purchase
+                    cmdLog.Parameters.AddWithValue("@prevStock", prevStock);
+                    cmdLog.Parameters.AddWithValue("@newStock", newStock);
+                    cmdLog.Parameters.AddWithValue("@staff", "@" + username);
+                    cmdLog.Parameters.AddWithValue("@date", today);
+                    cmdLog.ExecuteNonQuery();
                 }
+                UpdateInventory(connection, productID, totalQuantityChange);
             }
-            catch (Exception ex)
+            // Delete the purchase data after processing the order
+            using (var cmdDelete = new SqlCommand("DELETE FROM Purchase WHERE CustomerID = @cID", connection))
             {
-                MessageBox.Show("An error occurred while processing the logs and updating inventory: " + ex.Message,
-                                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                throw; 
+                cmdDelete.Parameters.AddWithValue("@cID", idGen);
+                cmdDelete.ExecuteNonQuery();
+            }
+        }
+
+        private int GetCurrentStock(SqlConnection connection, int productID)
+        {
+            string query = "SELECT SUM(Stocks) FROM Inventory WHERE ProductID = @prodID GROUP BY ProductID";
+            using (var cmd = new SqlCommand(query, connection))
+            {
+                cmd.Parameters.AddWithValue("@prodID", productID);
+                var result = cmd.ExecuteScalar();
+                return result != DBNull.Value ? Convert.ToInt32(result) : 0;
+            }
+        }
+
+        private void UpdateInventory(SqlConnection connection, int productID, int totalQuantityChange)
+        {
+            string inventoryQuery = "SELECT InventoryID, Stocks FROM Inventory WHERE ProductID = @prodID ORDER BY InventoryID ASC";
+
+            using (var cmdFetchInventory = new SqlCommand(inventoryQuery, connection))
+            {
+                cmdFetchInventory.Parameters.AddWithValue("@prodID", productID);
+                using (var inventoryReader = cmdFetchInventory.ExecuteReader())
+                {
+                    int remainingQuantity = totalQuantityChange;
+                    bool insufficientStock = false;
+
+                    while (inventoryReader.Read() && remainingQuantity > 0)
+                    {
+                        int inventoryID = Convert.ToInt32(inventoryReader["InventoryID"]);
+                        int currentStock = Convert.ToInt32(inventoryReader["Stocks"]);
+
+                        if (currentStock >= remainingQuantity)
+                        {
+                            string updateQuery = "UPDATE Inventory SET Stocks = Stocks - @deductQty WHERE InventoryID = @inventoryID";
+                            using (var cmdUpdate = new SqlCommand(updateQuery, connection))
+                            {
+                                cmdUpdate.Parameters.AddWithValue("@deductQty", remainingQuantity);
+                                cmdUpdate.Parameters.AddWithValue("@inventoryID", inventoryID);
+                                cmdUpdate.ExecuteNonQuery();
+                            }
+                            remainingQuantity = 0;
+                        }
+                        else
+                        {
+                            string updateQuery = "UPDATE Inventory SET Stocks = 0 WHERE InventoryID = @inventoryID";
+                            using (var cmdUpdate = new SqlCommand(updateQuery, connection))
+                            {
+                                cmdUpdate.Parameters.AddWithValue("@inventoryID", inventoryID);
+                                cmdUpdate.ExecuteNonQuery();
+                            }
+                            remainingQuantity -= currentStock;
+                        }
+                    }
+
+                    if (remainingQuantity > 0)
+                    {
+                        insufficientStock = true;
+                    }
+
+                    if (insufficientStock)
+                    {
+                        MessageBox.Show($"Insufficient stock for ProductID {productID}. Unable to fulfill the order.", "Stock Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                }
             }
         }
 
         private void HandleZeroStockItems(SqlConnection connection, DateTime today)
         {
+            string checkStockQuery = @"
+        SELECT TOP 1 InventoryID, ProductID 
+        FROM Inventory 
+        WHERE Stocks = 0 
+        ORDER BY InventoryID ASC"; // Fetch the top 1 row with zero stock based on InventoryID
+            string deleteProductQuery = "DELETE FROM Inventory WHERE InventoryID = @InventoryID";
+            string getLastLogQuery = @"
+        SELECT TOP 1 QuantityChange, NewStock 
+        FROM Logs 
+        WHERE ProductID = @ProductID 
+        ORDER BY Date DESC"; // Fetch the most recent log entry for the ProductID
+            string insertLogQuery = @"
+INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Date) 
+VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @date)";
 
-            string storedProcedureName = "HandleZeroStockItems";
-            string username = Form1.username.Substring(0, 1).ToUpper() + Form1.username.Substring(1).ToLower();
-
-
-            using (var command = new SqlCommand(storedProcedureName, connection))
+            using (var transaction = connection.BeginTransaction())
             {
-
-                command.CommandType = System.Data.CommandType.StoredProcedure;
-
-
-                command.Parameters.AddWithValue("@Today", today);
-                command.Parameters.AddWithValue("@Username", username);
-
-
-                using (var transaction = connection.BeginTransaction())
+                try
                 {
-                    command.Transaction = transaction;
+                    int inventoryId;
+                    int productId;
+                    int prevStock = 0;
+                    int newStock = 0;
 
-                    try
+                    // Fetch the top row with zero stock
+                    using (var checkCommand = new SqlCommand(checkStockQuery, connection, transaction))
+                    using (var reader = checkCommand.ExecuteReader())
                     {
-
-                        command.ExecuteNonQuery();
-
-
-                        transaction.Commit();
+                        if (!reader.Read())
+                        {
+                            // No rows with zero stock, exit early
+                            return;
+                        }
+                        inventoryId = reader.GetInt32(reader.GetOrdinal("InventoryID"));
+                        productId = reader.GetInt32(reader.GetOrdinal("ProductID"));
                     }
-                    catch (Exception ex)
+
+                    // Fetch the most recent log entry for the ProductID
+                    using (var lastLogCommand = new SqlCommand(getLastLogQuery, connection, transaction))
                     {
-
-                        transaction.Rollback();
-                        Console.WriteLine("Error: " + ex.Message);
+                        lastLogCommand.Parameters.AddWithValue("@ProductID", productId);
+                        using (var reader = lastLogCommand.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                prevStock = reader.GetInt32(reader.GetOrdinal("NewStock"));
+                                newStock = prevStock; // No actual stock change, so new stock is the same
+                            }
+                        }
                     }
+
+                    // Insert log
+                    string username = Form1.username.Substring(0, 1).ToUpper() + Form1.username.Substring(1).ToLower();
+                    using (var logCommand = new SqlCommand(insertLogQuery, connection, transaction))
+                    {
+                        logCommand.Parameters.AddWithValue("@actionType", "Stock at Capacity");
+                        logCommand.Parameters.AddWithValue("@prodID", productId);
+                        logCommand.Parameters.AddWithValue("@quantityChange", 0); // No stock change
+                        logCommand.Parameters.AddWithValue("@prevStock", prevStock); // From the most recent log
+                        logCommand.Parameters.AddWithValue("@newStock", newStock); // Same as prevStock
+                        logCommand.Parameters.AddWithValue("@staff", "@" + username);
+                        logCommand.Parameters.AddWithValue("@date", today);
+                        logCommand.ExecuteNonQuery();
+                    }
+
+                    // Delete the specific inventory row
+                    using (var deleteCommand = new SqlCommand(deleteProductQuery, connection, transaction))
+                    {
+                        deleteCommand.Parameters.AddWithValue("@InventoryID", inventoryId);
+                        deleteCommand.ExecuteNonQuery();
+                    }
+
+                    // Commit transaction
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    // Rollback transaction on failure
+                    transaction.Rollback();
+                    Console.WriteLine("Error: " + ex.Message);
+                    throw; // Re-throw the exception for higher-level handling
                 }
             }
         }
+
 
         private void order_Cashamount_TextChanged(object sender, EventArgs e)
         {

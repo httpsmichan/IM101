@@ -122,9 +122,7 @@ namespace IM101
 
         private void products_Load(object sender, EventArgs e)
         {
-            product_search.Text = "Search Product";
-            product_search.ForeColor = Color.Gray;
-
+            ResetSearchField();
             displayAllProducts();
         }
 
@@ -277,14 +275,17 @@ namespace IM101
 
         private void addprod_dataGrid_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(product_search.Text) || product_search.Text == "Search Product")
+            if (e.RowIndex != -1)
             {
-                displayAllProducts();
-            }
-            else
-            {
-                product_search.Text = "Search Product";
-                product_search.ForeColor = Color.Gray;
+                DataGridViewRow row = addprod_dataGrid.Rows[e.RowIndex];
+
+                getID = (int)row.Cells[0].Value;
+
+                addprod_name.Text = row.Cells[1].Value.ToString();
+                addprod_category.Text = row.Cells[2].Value.ToString();
+                addprod_price.Text = row.Cells[3].Value.ToString();
+                addprod_status.Text = row.Cells[4].Value.ToString();
+
             }
         }
 
@@ -338,36 +339,54 @@ namespace IM101
 
         private void product_search_TextChanged(object sender, EventArgs e)
         {
-            productdata proddata = new productdata();
+            productdata iData = new productdata();
             List<productdata> filteredData;
 
+            // Check if the search field contains valid input
             if (string.IsNullOrWhiteSpace(product_search.Text) || product_search.Text == "Search Product")
             {
-                filteredData = proddata.AllProductsData();
+                filteredData = iData.AllProductsData(); // Show all products if search is empty or placeholder
             }
             else
             {
-                filteredData = proddata.SearchProducts(product_search.Text.Trim());
+                filteredData = iData.SearchProducts(product_search.Text.Trim()); // Filter products based on search term
             }
 
-            addprod_dataGrid.DataSource = filteredData;
+            addprod_dataGrid.DataSource = filteredData; // Update the DataGrid with filtered data
         }
+
+        private void ResetSearchField()
+        {
+            if (string.IsNullOrWhiteSpace(product_search.Text))
+            {
+                product_search.Text = "Search Product"; 
+                product_search.ForeColor = Color.Gray; 
+            }
+            else
+            {
+                product_search.ForeColor = Color.Black; 
+            }
+        }
+    
 
         private void product_search_Leave(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(product_search.Text))
             {
-                product_search.Text = "Search Product";
-                product_search.ForeColor = Color.Gray;
+                ResetSearchField(); 
+            }
+            else
+            {
+                product_search.ForeColor = Color.Black; 
             }
         }
 
         private void product_search_Enter(object sender, EventArgs e)
         {
-            if (product_search.Text == "Search Product")
+            if (product_search.Text == "Search Product") 
             {
-                product_search.Text = "";
-                product_search.ForeColor = Color.Black;
+                product_search.Text = ""; 
+                product_search.ForeColor = Color.Black; 
             }
         }
     }

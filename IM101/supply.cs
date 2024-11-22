@@ -325,130 +325,53 @@ namespace IM101
 
         private void supply_upbtn_Click(object sender, EventArgs e)
         {
-            if (emptyFields())
-            {
-                MessageBox.Show("Please fill out all the fields.");
-                return;
-            }
-
-            string checkProductQuery = "SELECT COUNT(1) FROM Supply WHERE ProductID = @ProductID";
-
-            try
-            {
-                using (SqlCommand checkCommand = new SqlCommand(checkProductQuery, connect))
-                {
-                    if (checkConnection())
-                    {
-                        connect.Open();
-                    }
-
-                    checkCommand.Parameters.AddWithValue("@ProductID", supply_prodID.Text);
-                    int productExists = (int)checkCommand.ExecuteScalar();
-
-                    if (productExists == 0)
-                    {
-                        MessageBox.Show("The ProductID does not exist in the Supply table. Please add the supply data first.");
-                        return;
-                    }
-                }
-
-                string updateQuery = "UPDATE Supply SET ProductName = @ProductName, QtySupplied = @Quantity, UnitCost = @UnitCost, " +
-                                     "TotalCost = @TotalCost, SupplierID = @SupplierID, Status = @Status, SupplyDate = @Date " +
-                                     "WHERE ProductID = @ProductID";
-
-                using (SqlCommand command = new SqlCommand(updateQuery, connect))
-                {
-                    command.Parameters.AddWithValue("@ProductID", supply_prodID.Text);
-                    command.Parameters.AddWithValue("@ProductName", supply_prodname.Text);
-                    command.Parameters.AddWithValue("@Quantity", supply_qtys.Text);
-                    command.Parameters.AddWithValue("@UnitCost", supply_unitcost.Text);
-                    command.Parameters.AddWithValue("@TotalCost", supply_totalcost.Text);
-                    command.Parameters.AddWithValue("@SupplierID", supply_supplierID.Text);
-                    command.Parameters.AddWithValue("@Status", supply_status.SelectedItem == null ? (object)DBNull.Value : supply_status.SelectedItem.ToString());
-                    command.Parameters.AddWithValue("@Date", DateTime.Today);
-
-                    command.ExecuteNonQuery();
-                }
-
-                // If status is "Received", update the inventory
-                if (supply_status.SelectedItem.ToString() == "Received")
-                {
-                    string updateInventoryQuery = "UPDATE Inventory SET Quantity = Quantity + @Quantity WHERE ProductID = @ProductID";
-
-                    using (SqlCommand inventoryCommand = new SqlCommand(updateInventoryQuery, connect))
-                    {
-                        inventoryCommand.Parameters.AddWithValue("@Quantity", supply_qtys.Text);
-                        inventoryCommand.Parameters.AddWithValue("@ProductID", supply_prodID.Text);
-
-                        inventoryCommand.ExecuteNonQuery();
-                    }
-                }
-
-                clearFields();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("An error occurred: " + ex.Message);
-            }
-            finally
-            {
-                if (connect.State == ConnectionState.Open)
-                {
-                    connect.Close();
-                }
-
-                DisplayAllSupplies();
-            }
+           
         }
-
         private void remove_removebtn_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(supply_prodID.Text))
+            if (supply_grid.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Please provide a ProductID to remove.");
+                MessageBox.Show("Please select a row to delete.");
                 return;
             }
 
-            string checkProductQuery = "SELECT COUNT(1) FROM Supply WHERE ProductID = @ProductID";
+            // Get the SupplyID from the selected row (adjust the column index if needed)
+            var selectedRow = supply_grid.SelectedRows[0];
+            int supplyID = Convert.ToInt32(selectedRow.Cells["SupplyID"].Value);
+
+            string checkSupplyQuery = "SELECT COUNT(1) FROM Supply WHERE SupplyID = @SupplyID";
 
             try
             {
-                using (SqlCommand checkCommand = new SqlCommand(checkProductQuery, connect))
+                if (checkConnection())
                 {
-                    if (checkConnection())
-                    {
-                        connect.Open();
-                    }
+                    connect.Open();
+                }
 
-                    checkCommand.Parameters.AddWithValue("@ProductID", supply_prodID.Text);
-                    int productExists = (int)checkCommand.ExecuteScalar();
+                // Check if the supply record exists for the specified SupplyID
+                using (SqlCommand checkCommand = new SqlCommand(checkSupplyQuery, connect))
+                {
+                    checkCommand.Parameters.AddWithValue("@SupplyID", supplyID);
 
-                    if (productExists == 0)
+                    int supplyExists = (int)checkCommand.ExecuteScalar();
+
+                    if (supplyExists == 0)
                     {
-                        MessageBox.Show("The ProductID does not exist in the Supply table.");
+                        MessageBox.Show("The SupplyID does not exist in the Supply table.");
                         return;
                     }
                 }
 
-                // Get QtySupplied to adjust inventory
-                string qtyQuery = "SELECT QtySupplied FROM Supply WHERE ProductID = @ProductID";
-                int qtySupplied = 0;
-                using (SqlCommand qtyCommand = new SqlCommand(qtyQuery, connect))
+                // Delete the supply record for the given SupplyID
+                string deleteQuery = "DELETE FROM Supply WHERE SupplyID = @SupplyID";
+
+                using (SqlCommand deleteCommand = new SqlCommand(deleteQuery, connect))
                 {
-                    qtyCommand.Parameters.AddWithValue("@ProductID", supply_prodID.Text);
-                    qtySupplied = (int)qtyCommand.ExecuteScalar();
+                    deleteCommand.Parameters.AddWithValue("@SupplyID", supplyID);
+                    deleteCommand.ExecuteNonQuery();
                 }
 
-                string deleteQuery = "DELETE FROM Supply WHERE ProductID = @ProductID";
-
-                using (SqlCommand command = new SqlCommand(deleteQuery, connect))
-                {
-                    command.Parameters.AddWithValue("@ProductID", supply_prodID.Text);
-
-                    command.ExecuteNonQuery();
-                }
-
-                MessageBox.Show("Supply data removed successfully!");
+                MessageBox.Show("Supply data for the specified SupplyID removed successfully!");
                 clearFields();
             }
             catch (Exception ex)

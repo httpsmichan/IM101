@@ -48,61 +48,61 @@ namespace IM101
                 {
                     connect.Open();
 
-                    string selectData = "SELECT COUNT(*) FROM Staff WHERE username = @usern AND password = @pass";
-
-                    using (SqlCommand cmd = new SqlCommand(selectData, connect))
+                    // Create the SQL command for calling the stored procedure
+                    using (SqlCommand cmd = new SqlCommand("LoginProcedure", connect))
                     {
-                        cmd.Parameters.AddWithValue("@usern", login_username.Text.Trim());
-                        cmd.Parameters.AddWithValue("@pass", login_password.Text.Trim());
+                        cmd.CommandType = CommandType.StoredProcedure;
 
-                        int rowCount = (int)cmd.ExecuteScalar();
+                        // Add input parameters
+                        cmd.Parameters.AddWithValue("@Username", login_username.Text.Trim());
+                        cmd.Parameters.AddWithValue("@Password", login_password.Text.Trim());
 
-                        if (rowCount > 0)
+                        // Define output parameters
+                        SqlParameter userRoleParam = new SqlParameter("@UserRole", SqlDbType.NVarChar, 50)
                         {
-                            string selectRole = "SELECT Role FROM Staff WHERE username = @usern AND password = @pass";
+                            Direction = ParameterDirection.Output
+                        };
+                        cmd.Parameters.Add(userRoleParam);
 
-                            using (SqlCommand getRole = new SqlCommand(selectRole, connect))
+                        SqlParameter messageParam = new SqlParameter("@Message", SqlDbType.NVarChar, -1)
+                        {
+                            Direction = ParameterDirection.Output
+                        };
+                        cmd.Parameters.Add(messageParam);
+
+                        // Execute the stored procedure
+                        cmd.ExecuteNonQuery();
+
+                        // Retrieve output values
+                        string userRole = userRoleParam.Value as string;
+                        string message = messageParam.Value.ToString();
+
+                        // Display the message
+                        MessageBox.Show(message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        // Navigate based on the role
+                        if (message == "Login successfully!")
+                        {
+                            username = login_username.Text.Trim();
+
+                            if (userRole == "Admin")
                             {
-                                getRole.Parameters.AddWithValue("@usern", login_username.Text.Trim());
-                                getRole.Parameters.AddWithValue("@pass", login_password.Text.Trim());
-
-                                object roleObj = getRole.ExecuteScalar();
-                                string userRole = roleObj != DBNull.Value ? roleObj as string : null;
-
-                                username = login_username.Text.Trim();
-
-                                if (userRole == null)
-                                {
-                                    MessageBox.Show("Wait for the admin's approval.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                }
-                                else
-                                {
-                                    MessageBox.Show("Login successfully!", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                                    if (userRole == "Admin")
-                                    {
-                                        MainForm mForm = new MainForm();
-                                        mForm.Show();
-                                        this.Hide();
-                                    }
-                                    else if (userRole == "Cashier")
-                                    {
-                                        CashierMainForm cForm = new CashierMainForm();
-                                        cForm.Show();
-                                        this.Hide();
-                                    }
-                                }
+                                MainForm mForm = new MainForm();
+                                mForm.Show();
+                                this.Hide();
                             }
-                        }
-                        else
-                        {
-                            MessageBox.Show("Incorrect username/password", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            else if (userRole == "Cashier")
+                            {
+                                CashierMainForm cForm = new CashierMainForm();
+                                cForm.Show();
+                                this.Hide();
+                            }
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Connection failed: " + ex, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Connection failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 finally
                 {

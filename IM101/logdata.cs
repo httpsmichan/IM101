@@ -67,104 +67,54 @@ namespace IM101
             return listData;
         }
 
+        public List<logdata> SearchLogs(string searchTerm)
+        {
+            List<logdata> listData = new List<logdata>();
 
+            try
+            {
+                if (connect.State != ConnectionState.Open)
+                    connect.Open();
 
+                string searchQuery = @"
+            SELECT * FROM Logs
+            WHERE ActionType LIKE @searchTerm 
+               OR ProductID LIKE @searchTerm
+               OR Staff LIKE @searchTerm"; // Add Staff to the WHERE clause
 
-        /*      public List<logdata> GetTodayLogs()
-              {
-                  List<logdata> listData = new List<logdata>();
+                using (SqlCommand cmd = new SqlCommand(searchQuery, connect))
+                {
+                    cmd.Parameters.AddWithValue("@searchTerm", "%" + searchTerm + "%");
+                    SqlDataReader reader = cmd.ExecuteReader();
 
-                  try
-                  {
-                      if (connect.State != ConnectionState.Open)
-                          connect.Open();
+                    while (reader.Read())
+                    {
+                        logdata log = new logdata
+                        {
+                            LogID = Convert.ToInt32(reader["LogID"]),
+                            ActionType = reader["ActionType"] == DBNull.Value ? null : reader["ActionType"].ToString(),
+                            ProductID = Convert.ToInt32(reader["ProductID"]),
+                            QuantityChange = reader["QuantityChange"] == DBNull.Value ? null : reader["QuantityChange"].ToString(),
+                            PrevStock = reader["PrevStock"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["PrevStock"]),
+                            NewStock = reader["NewStock"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["NewStock"]),
+                            Staff = reader["Staff"] == DBNull.Value ? null : reader["Staff"].ToString(),
+                            Date = reader.IsDBNull(reader.GetOrdinal("Date")) ? string.Empty : Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd")
+                        };
 
-                      DateTime today = DateTime.Today;
-                      string selectData = @"SELECT * FROM Logs WHERE Date = @date";
+                        listData.Add(log);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failed Connection: " + ex.Message);
+            }
+            finally
+            {
+                connect.Close();
+            }
 
-                      using (SqlCommand cmd = new SqlCommand(selectData, connect))
-                      {
-                          cmd.Parameters.AddWithValue("@date", today);
-                          SqlDataReader reader = cmd.ExecuteReader();
-
-                          while (reader.Read())
-                          {
-                              logdata log = new logdata
-                              {
-                                  LogID = Convert.ToInt32(reader["LogID"]),
-                                  ActionType = reader["ActionType"].ToString(),
-                                  ProductID = Convert.ToInt32(reader["ProductID"]),
-                                  QuantityChange = Convert.ToInt32(reader["QuantityChange"]),
-                                  PrevStock = Convert.ToInt32(reader["PrevStock"]),
-                                  NewStock = Convert.ToInt32(reader["NewStock"]),
-                                  Staff = reader["Staff"].ToString(),
-                                  Price = Convert.ToDouble(reader["Price"]),
-                                  Date = Convert.ToDateTime(reader["Date"])
-                              };
-
-                              listData.Add(log);
-                          }
-                      }
-                  }
-                  catch (Exception ex)
-                  {
-                      Console.WriteLine("Failed Connection: " + ex.Message);
-                  }
-                  finally
-                  {
-                      connect.Close();
-                  }
-
-                  return listData;
-              }
-
-              public List<logdata> SearchLogs(string searchTerm)
-              {
-                  List<logdata> listData = new List<logdata>();
-
-                  try
-                  {
-                      if (connect.State != ConnectionState.Open)
-                          connect.Open();
-
-                      string searchQuery = @"
-                          SELECT * FROM Logs
-                          WHERE ActionType LIKE @searchTerm OR ProductID LIKE @searchTerm";
-
-                      using (SqlCommand cmd = new SqlCommand(searchQuery, connect))
-                      {
-                          cmd.Parameters.AddWithValue("@searchTerm", "%" + searchTerm + "%");
-                          SqlDataReader reader = cmd.ExecuteReader();
-
-                          while (reader.Read())
-                          {
-                              logdata log = new logdata
-                              {
-                                  LogID = Convert.ToInt32(reader["LogID"]),
-                                  ActionType = reader["ActionType"].ToString(),
-                                  ProductID = Convert.ToInt32(reader["ProductID"]),
-                                  QuantityChange = Convert.ToInt32(reader["QuantityChange"]),
-                                  PrevStock = Convert.ToInt32(reader["PrevStock"]),
-                                  NewStock = Convert.ToInt32(reader["NewStock"]),
-                                  Staff = reader["Staff"].ToString(),
-                                  Price = Convert.ToDouble(reader["Price"]),
-                                  Date = Convert.ToDateTime(reader["Date"])
-                              };
-
-                              listData.Add(log);
-                          }
-                      }
-                  }
-                  catch (Exception ex)
-                  {
-                      Console.WriteLine("Failed Connection: " + ex.Message);
-                  }
-                  finally
-                  {
-                      connect.Close();
-                  }
-
-                  return listData;
-              }*/
+            return listData;
+        }
     }
 }

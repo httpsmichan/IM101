@@ -47,58 +47,37 @@ namespace IM101
                     {
                         connect.Open();
 
-                        string checkUsername = "SELECT * FROM Staff WHERE username = @usern";
-
-                        using (SqlCommand cmd = new SqlCommand(checkUsername, connect))
+                        using (SqlCommand cmd = new SqlCommand("SignUpProcedure", connect))
                         {
-                            cmd.Parameters.AddWithValue("@usern", signup_username.Text.Trim());
+                            cmd.CommandType = CommandType.StoredProcedure;
 
-                            SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-                            DataTable table = new DataTable();
-                            adapter.Fill(table);
+                            cmd.Parameters.AddWithValue("@Username", signup_username.Text.Trim());
+                            cmd.Parameters.AddWithValue("@Password", signup_password.Text.Trim());
+                            cmd.Parameters.AddWithValue("@ConfirmPassword", signup_cpassword.Text.Trim());
+                            cmd.Parameters.AddWithValue("@Email", " "); 
+                            cmd.Parameters.AddWithValue("@MobileNum", " "); 
 
-                            if (table.Rows.Count > 0)
+                            SqlParameter outputMessage = new SqlParameter("@Message", SqlDbType.NVarChar, -1);
+                            outputMessage.Direction = ParameterDirection.Output;
+                            cmd.Parameters.Add(outputMessage);
+
+                            cmd.ExecuteNonQuery();
+
+                            string message = outputMessage.Value.ToString();
+
+                            MessageBox.Show(message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                            if (message == "Successfully signed up!")
                             {
-                                MessageBox.Show(signup_username.Text.Trim() +
-                                    "is already taken", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            }
-                            else if (signup_password.Text.Length < 8)
-                            {
-                                MessageBox.Show("Invalid Password, at least 8 characters are needed", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            }
-                            else if (signup_password.Text.Trim() != signup_cpassword.Text.Trim())
-                            {
-                                MessageBox.Show("Password does not match", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            }
-                            else
-                            {
-                                string insertData = "INSERT INTO Staff (username, password, email, mobilenum) " +
-                           "VALUES (@usern, @pass, @uemail, @mnum) ";
-
-                                using (SqlCommand insertD = new SqlCommand(insertData, connect))
-                                {
-                                    insertD.Parameters.AddWithValue("@usern", signup_username.Text.Trim());
-                                    insertD.Parameters.AddWithValue("@pass", signup_password.Text.Trim());
-                                    insertD.Parameters.AddWithValue("@uemail", " ");
-                                    insertD.Parameters.AddWithValue("@mnum", " ");
-
-                                    insertD.ExecuteNonQuery();
-
-                                    MessageBox.Show("Successfully signed up!", "Information Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                                    Form1 loginForm = new Form1();
-                                    loginForm.Show();
-                                    this.Hide();
-                                }
+                                Form1 loginForm = new Form1();
+                                loginForm.Show();
+                                this.Hide();
                             }
                         }
-
-
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Connection Failed: " + ex
-                            , "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Connection Failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     finally
                     {

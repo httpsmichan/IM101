@@ -176,17 +176,16 @@ namespace IM101
             supplierdata iData = new supplierdata();
             List<supplierdata> filteredData;
 
-            // Check if the search text is empty or contains the placeholder text
-            if (string.IsNullOrWhiteSpace(supplier_search.Text) || supplier_search.Text == "Search Suppliers")
+            if (string.IsNullOrWhiteSpace(supplier_search.Text) || supplier_search.Text == "Search Supplier Name")
             {
-                filteredData = iData.AllSuppliersData();
+                filteredData = iData.AllSuppliersData(); 
             }
             else
             {
-                filteredData = iData.SearchSupplier(supplier_search.Text.Trim());
+                filteredData = iData.SearchSupplier(supplier_search.Text.Trim()); 
             }
 
-            supplier_dataGrid.DataSource = filteredData;
+            supplier_dataGrid.DataSource = filteredData; 
         }
 
         private void supplier_Load(object sender, EventArgs e)
@@ -199,7 +198,11 @@ namespace IM101
         {
             if (string.IsNullOrWhiteSpace(supplier_search.Text))
             {
-                ResetSearchField();
+                ResetSearchField(); 
+            }
+            else
+            {
+                supplier_search.ForeColor = Color.Black;
             }
         }
 
@@ -208,14 +211,14 @@ namespace IM101
             if (supplier_search.Text == "Search Supplier Name")
             {
                 supplier_search.Text = "";
-                supplier_search.ForeColor = Color.Black;
+                supplier_search.ForeColor = Color.Black; 
             }
         }
 
         private void ResetSearchField()
         {
             supplier_search.Text = "Search Supplier Name";
-            supplier_search.ForeColor = Color.Gray;
+            supplier_search.ForeColor = Color.Gray; 
         }
 
         private void supplier_clearbtn_Click(object sender, EventArgs e)
@@ -226,7 +229,6 @@ namespace IM101
         private void supplier_dataGrid_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             supplier_dataGrid.ReadOnly = true;
-
         }
     }
 }

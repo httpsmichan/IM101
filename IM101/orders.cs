@@ -161,99 +161,107 @@ namespace IM101
             order_price.Text = "";
         }
 
-        private void order_addbtn_Click(object sender, EventArgs e)
+        private void AddOrder()
         {
             IDGenerator();
 
             if (string.IsNullOrEmpty(enterQty.Text) || string.IsNullOrEmpty(enterprodID.Text))
             {
                 Console.WriteLine("Select item first");
+                return;
             }
-            else
+
+            if (!checkConnection())
             {
-                if (checkConnection())
+                MessageBox.Show("Unable to connect to the database.", "Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            try
+            {
+                connect.Open();
+
+                int availableStock = 0;
+                string prodName = "";
+                string category = "";
+                string unit = "";
+                float price = 0;
+                int productID = int.Parse(enterprodID.Text.Trim());
+
+                // Query product details
+                string selectData = @"
+            SELECT p.ProductName, p.Price, p.Category, i.Stocks, i.Amount
+            FROM Product p
+            JOIN Inventory i ON p.ProductID = i.ProductID
+            WHERE p.ProductID = @prodID AND p.Status = @status";
+
+                using (SqlCommand cmd = new SqlCommand(selectData, connect))
                 {
-                    try
+                    cmd.Parameters.AddWithValue("@prodID", productID);
+                    cmd.Parameters.AddWithValue("@status", "Available");
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        connect.Open();
-
-                        int availableStock = 0;
-                        string prodName = "";
-                        string category = "";
-                        string unit = "";
-                        float price = 0;
-                        int productID = int.Parse(enterprodID.Text.Trim());
-
-                        // Query product details
-                        string selectData = @"
-                                    SELECT p.ProductName, p.Price, p.Category, i.Stocks, i.Amount
-                                    FROM Product p
-                                    JOIN Inventory i ON p.ProductID = i.ProductID
-                                    WHERE p.ProductID = @prodID AND p.Status = @status";
-
-                        using (SqlCommand cmd = new SqlCommand(selectData, connect))
+                        if (reader.Read())
                         {
-                            cmd.Parameters.AddWithValue("@prodID", productID);
-                            cmd.Parameters.AddWithValue("@status", "Available");
-
-                            using (SqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                if (reader.Read())
-                                {
-                                    prodName = reader["ProductName"].ToString();
-                                    price = Convert.ToSingle(reader["Price"]);
-                                    category = reader["Category"].ToString();
-                                    unit = reader["Amount"].ToString();
-                                    availableStock = Convert.ToInt32(reader["Stocks"]);
-                                }
-                            }
+                            prodName = reader["ProductName"].ToString();
+                            price = Convert.ToSingle(reader["Price"]);
+                            category = reader["Category"].ToString();
+                            unit = reader["Amount"].ToString();
+                            availableStock = Convert.ToInt32(reader["Stocks"]);
                         }
-
-                        int quantity = int.TryParse(enterQty.Text, out int qty) ? qty : 0;
-
-                        if (quantity > availableStock)
-                        {
-                            MessageBox.Show("Order quantity exceeds available stock.", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                        else
-                        {
-                            float subtotal = price * quantity;
-                            DateTime today = DateTime.Today;
-
-                            // Insert data into Purchase table
-                            string insertData = @"INSERT INTO Purchase (CustomerID, ProductID, ProductName, Category, Quantity, Unit, OriginalPrice, Subtotal, OrderDate) 
-                          VALUES (@catID, @prodID, @prodName, @category, @qty, @unit, @price, @subtotal, @orderDate)";
-
-                            using (SqlCommand insertCmd = new SqlCommand(insertData, connect))
-                            {
-                                insertCmd.Parameters.AddWithValue("@catID", idGen);
-                                insertCmd.Parameters.AddWithValue("@prodID", productID);
-                                insertCmd.Parameters.AddWithValue("@prodName", prodName);
-                                insertCmd.Parameters.AddWithValue("@category", category);
-                                insertCmd.Parameters.AddWithValue("@qty", quantity);
-                                insertCmd.Parameters.AddWithValue("@unit", unit);
-                                insertCmd.Parameters.AddWithValue("@price", price);
-                                insertCmd.Parameters.AddWithValue("@subtotal", subtotal);
-                                insertCmd.Parameters.AddWithValue("@orderDate", today);
-
-                                insertCmd.ExecuteNonQuery();
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Connection failed: " + ex, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    finally
-                    {
-                        connect.Close();
                     }
                 }
 
-                displayOrders();
-                displayTotalPrice();
+                int quantity = int.TryParse(enterQty.Text, out int qty) ? qty : 0;
+
+                if (quantity > availableStock)
+                {
+                    MessageBox.Show("Order quantity exceeds available stock.", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else
+                {
+                    float subtotal = price * quantity;
+                    DateTime today = DateTime.Today;
+
+                    // Insert data into Purchase table
+                    string insertData = @"INSERT INTO Purchase (CustomerID, ProductID, ProductName, Category, Quantity, Unit, OriginalPrice, Subtotal, OrderDate) 
+                VALUES (@catID, @prodID, @prodName, @category, @qty, @unit, @price, @subtotal, @orderDate)";
+
+                    using (SqlCommand insertCmd = new SqlCommand(insertData, connect))
+                    {
+                        insertCmd.Parameters.AddWithValue("@catID", idGen);
+                        insertCmd.Parameters.AddWithValue("@prodID", productID);
+                        insertCmd.Parameters.AddWithValue("@prodName", prodName);
+                        insertCmd.Parameters.AddWithValue("@category", category);
+                        insertCmd.Parameters.AddWithValue("@qty", quantity);
+                        insertCmd.Parameters.AddWithValue("@unit", unit);
+                        insertCmd.Parameters.AddWithValue("@price", price);
+                        insertCmd.Parameters.AddWithValue("@subtotal", subtotal);
+                        insertCmd.Parameters.AddWithValue("@orderDate", today);
+
+                        insertCmd.ExecuteNonQuery();
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Connection failed: " + ex, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                connect.Close();
+            }
+
+            displayOrders();
+            displayTotalPrice();
         }
+
+        private void order_addbtn_Click(object sender, EventArgs e)
+        {
+            AddOrder();
+        }
+
         private int purchaseID = 0;
 
         private void order_removebtn_Click(object sender, EventArgs e)
@@ -363,33 +371,38 @@ namespace IM101
             List<productdata> filteredData;
 
             // Check if the search text is empty or contains the placeholder text
-            if (string.IsNullOrWhiteSpace(textBox1.Text) || textBox1.Text == "Search Products")
+            if (string.IsNullOrWhiteSpace(textBox1.Text) || textBox1.Text == "Search Product")
             {
-                filteredData = proddata.allAvailableProducts();
+                filteredData = proddata.allAvailableProducts(); // Show all products if search is empty or placeholder
             }
             else
             {
-                filteredData = proddata.SearchProducts(textBox1.Text.Trim());
+                filteredData = proddata.SearchProducts(textBox1.Text.Trim()); // Filter products based on search term
             }
 
-            order_Gridview1.DataSource = filteredData;
+            order_Gridview1.DataSource = filteredData; // Update the DataGrid with filtered data
         }
 
         private void textBox1_Leave(object sender, EventArgs e)
-        {
+        {// Restore placeholder text if the search box is empty
             if (string.IsNullOrWhiteSpace(textBox1.Text))
             {
                 textBox1.Text = "Search Product";
-                textBox1.ForeColor = Color.Gray;
-            }   
+                textBox1.ForeColor = Color.Gray; // Set the color to gray for placeholder
+            }
+            else
+            {
+                textBox1.ForeColor = Color.Black; // Set text color to black if there's input
+            }
         }
 
         private void textBox1_Enter(object sender, EventArgs e)
         {
+            // Clear the placeholder text when focusing on the search field
             if (textBox1.Text == "Search Product")
             {
                 textBox1.Text = "";
-                textBox1.ForeColor = Color.Black;
+                textBox1.ForeColor = Color.Black; // Set the text color to black while typing
             }
         }
 
@@ -477,101 +490,13 @@ namespace IM101
 
         private void enterQty_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)  
+            if (e.KeyCode == Keys.Enter)
             {
-                IDGenerator();
-
-                if (string.IsNullOrEmpty(enterQty.Text) || string.IsNullOrEmpty(enterprodID.Text))
-                {
-                    Console.WriteLine("Select item first");
-                }
-                else
-                {
-                    if (checkConnection())
-                    {
-                        try
-                        {
-                            connect.Open();
-
-                            int availableStock = 0;
-                            string prodName = "";
-                            string category = "";
-                            string unit = "";
-                            float price = 0;
-                            int productID = int.Parse(enterprodID.Text.Trim());
-
-                            // Query product details
-                            string selectData = @"
-                                SELECT p.ProductName, p.Price, p.Category, i.Stocks, i.Amount
-                                FROM Product p
-                                JOIN Inventory i ON p.ProductID = i.ProductID
-                                WHERE p.ProductID = @prodID AND p.Status = @status";
-
-                            using (SqlCommand cmd = new SqlCommand(selectData, connect))
-                            {
-                                cmd.Parameters.AddWithValue("@prodID", productID);
-                                cmd.Parameters.AddWithValue("@status", "Available");
-
-                                using (SqlDataReader reader = cmd.ExecuteReader())
-                                {
-                                    if (reader.Read())
-                                    {
-                                        prodName = reader["ProductName"].ToString();
-                                        price = Convert.ToSingle(reader["Price"]);
-                                        category = reader["Category"].ToString();
-                                        unit = reader["Amount"].ToString();
-                                        availableStock = Convert.ToInt32(reader["Stocks"]);
-                                    }
-                                }
-                            }
-
-                            int quantity = int.TryParse(enterQty.Text, out int qty) ? qty : 0;
-
-                            if (quantity > availableStock)
-                            {
-                                MessageBox.Show("Order quantity exceeds available stock.", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            }
-                            else
-                            {
-                                float subtotal = price * quantity;
-                                DateTime today = DateTime.Today;
-
-                                // Insert data into Purchase table
-                                string insertData = @"INSERT INTO Purchase (CustomerID, ProductID, ProductName, Category, Quantity, Unit, OriginalPrice, Subtotal, OrderDate) 
-                        VALUES (@catID, @prodID, @prodName, @category, @qty, @unit, @price, @subtotal, @orderDate)";
-
-                                using (SqlCommand insertCmd = new SqlCommand(insertData, connect))
-                                {
-                                    insertCmd.Parameters.AddWithValue("@catID", idGen);
-                                    insertCmd.Parameters.AddWithValue("@prodID", productID);
-                                    insertCmd.Parameters.AddWithValue("@prodName", prodName);
-                                    insertCmd.Parameters.AddWithValue("@category", category);
-                                    insertCmd.Parameters.AddWithValue("@qty", quantity);
-                                    insertCmd.Parameters.AddWithValue("@unit", unit);
-                                    insertCmd.Parameters.AddWithValue("@price", price);
-                                    insertCmd.Parameters.AddWithValue("@subtotal", subtotal);
-                                    insertCmd.Parameters.AddWithValue("@orderDate", today);
-
-                                    insertCmd.ExecuteNonQuery();
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show("Connection failed: " + ex, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                        finally
-                        {
-                            connect.Close();
-                        }
-                    }
-
-                    displayOrders();
-                    displayTotalPrice();
-                }
+                AddOrder();
             }
         }
-      
+
+
         private void enterprodID_TextChanged(object sender, EventArgs e)
         {
 
