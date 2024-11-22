@@ -132,7 +132,7 @@ namespace IM101
                     }
                 }
 
-                // Retrieve ProductName and UnitCost (Price) from Supply table
+                // Retrieve ProductName and UnitCost from Supply table
                 string getProductDetailsQuery = "SELECT ProductName, UnitCost FROM Supply WHERE ProductID = @ProductID";
                 string productName = string.Empty;
                 double unitCost = 0;
@@ -150,21 +150,10 @@ namespace IM101
                     }
                 }
 
-                // Handle the status and logging logic
+                // Handle the status and proceed accordingly
                 string status = supply_status.SelectedItem == null ? "Order Placed" : supply_status.SelectedItem.ToString();
 
-                if (status == "Received")
-                {
-                    // Log the inventory update for "Received"
-                    InsertLogEntry(connect, supply_prodID.Text, supply_qtys.Text, "Supply Received");
-                }
-                else
-                {
-                    // Insert the order with "Order Placed" status if not "Received"
-                    status = "Order Placed"; // Set status to "Order Placed"
-                }
-
-                // Insert supply data into the Supply table with the correct status
+                // Insert supply data into the Supply table
                 string insertQuery = "INSERT INTO Supply (ProductID, ProductName, QtySupplied, UnitCost, TotalCost, SupplierID, Status, SupplyDate) " +
                                      "VALUES (@ProductID, @ProductName, @Quantity, @UnitCost, @TotalCost, @SupplierID, @Status, @Date)";
 
@@ -176,21 +165,25 @@ namespace IM101
                     command.Parameters.AddWithValue("@UnitCost", supply_unitcost.Text);
                     command.Parameters.AddWithValue("@TotalCost", supply_totalcost.Text);
                     command.Parameters.AddWithValue("@SupplierID", supply_supplierID.Text);
-                    command.Parameters.AddWithValue("@Status", status); // Insert the correct status ("Order Placed" or "Received")
+                    command.Parameters.AddWithValue("@Status", status);
                     command.Parameters.AddWithValue("@Date", DateTime.Today);
 
                     command.ExecuteNonQuery(); // Execute the insert query for Supply
                 }
 
-                // Ensure connection is open for Inventory insert
-                if (connect.State != ConnectionState.Open)
+                // Only update inventory and insert logs if status is "Received"
+                if (status == "Received")
                 {
-                    connect.Open();  // Explicitly open the connection for Inventory insert
+
+                    // Insert a log entry into the Logs table
+                    InsertLogEntry(connect, supply_prodID.Text, supply_qtys.Text, "Supply Received");
+
+                    // Insert into the Inventory table
+                    InsertInventory(connect, supply_prodID.Text, productName, unitCost, supply_qtys.Text);
+
                 }
 
-                // Call the InsertInventory method to insert into Inventory table
-                InsertInventory(connect, supply_prodID.Text, productName, unitCost, supply_qtys.Text);
-                clearFields();
+                clearFields(); // Clear the fields after insertion
             }
             catch (Exception ex)
             {
@@ -271,39 +264,69 @@ namespace IM101
                 // Ensure the connection is open before starting any query
                 if (connection.State != ConnectionState.Open)
                 {
-                    connection.Open(); // Explicitly open the connection if it's not already open
+                    connection.Open();
                 }
 
-                // Get current stock for the product (PrevStock)
+                // Get current stock (PrevStock)
                 int prevStock = GetCurrentStock(connection, Convert.ToInt32(productID));
 
-                // Calculate the new stock after the supply is added (NewStock)
+                // Calculate new stock
                 int newStock = prevStock + Convert.ToInt32(quantitySupplied);
 
+                // Retrieve the latest SupplyID for the current product (do not increment)
+                string getSupplyIDQuery = @"
+            SELECT TOP 1 SupplyID 
+            FROM Supply 
+            WHERE ProductID = @ProductID 
+            ORDER BY SupplyID DESC";  // Retrieve the latest SupplyID based on the sequence of records
 
-                // Insert the log with correct values for PrevStock and NewStock
-                string insertLogQuery = "INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Date) " +
-                                        "VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @date)";
+                int supplyID = 0;
+                using (var getSupplyIDCmd = new SqlCommand(getSupplyIDQuery, connection))
+                {
+                    getSupplyIDCmd.Parameters.AddWithValue("@ProductID", productID);
+                    object result = getSupplyIDCmd.ExecuteScalar();
+                    if (result != null)
+                    {
+                        supplyID = Convert.ToInt32(result); // No increment, just get the latest SupplyID
+                    }
+                }
+
+                // Prepare the log query
+                string insertLogQuery = @"
+            INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Date, IDs) 
+            VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @date, @ids)";
 
                 using (var cmdLog = new SqlCommand(insertLogQuery, connection))
                 {
-                    string username = Form1.username.Substring(0, 1).ToUpper() + Form1.username.Substring(1).ToLower();
+                    // Ensure username is valid
+                    string username = Form1.username?.Substring(0, 1).ToUpper() + Form1.username?.Substring(1).ToLower();
+                    if (string.IsNullOrWhiteSpace(username))
+                    {
+                        throw new InvalidOperationException("Username is not set. Please ensure the user is logged in.");
+                    }
 
-                    // Set the log parameters
-                    cmdLog.Parameters.AddWithValue("@actionType", actionType); // Action type (e.g., "Supply Received")
-                    cmdLog.Parameters.AddWithValue("@prodID", productID); // Product ID
-                    cmdLog.Parameters.AddWithValue("@quantityChange", quantitySupplied); // Quantity supplied (change in stock)
-                    cmdLog.Parameters.AddWithValue("@prevStock", prevStock); // Stock before the supply (PrevStock)
-                    cmdLog.Parameters.AddWithValue("@newStock", newStock); // Stock after the supply (NewStock)
-                    cmdLog.Parameters.AddWithValue("@staff", "@" + username); 
-                    cmdLog.Parameters.AddWithValue("@date", DateTime.Now); 
+                    // Add parameters
+                    cmdLog.Parameters.Add(new SqlParameter("@actionType", SqlDbType.NVarChar, 50) { Value = actionType });
+                    cmdLog.Parameters.Add(new SqlParameter("@prodID", SqlDbType.Int) { Value = Convert.ToInt32(productID) });
+                    cmdLog.Parameters.Add(new SqlParameter("@quantityChange", SqlDbType.Int) { Value = Convert.ToInt32(quantitySupplied) });
+                    cmdLog.Parameters.Add(new SqlParameter("@prevStock", SqlDbType.Int) { Value = prevStock });
+                    cmdLog.Parameters.Add(new SqlParameter("@newStock", SqlDbType.Int) { Value = newStock });
+                    cmdLog.Parameters.Add(new SqlParameter("@staff", SqlDbType.NVarChar, 50) { Value = "@" + username });
+                    cmdLog.Parameters.Add(new SqlParameter("@date", SqlDbType.DateTime) { Value = DateTime.Now });
+                    cmdLog.Parameters.Add(new SqlParameter("@ids", SqlDbType.NVarChar, 100) { Value = "SupplyID: " + supplyID });
 
-                    cmdLog.ExecuteNonQuery(); // Execute the command to insert the log
+                    // Execute the query and check if a row was inserted
+                    int rowsAffected = cmdLog.ExecuteNonQuery();
+                    if (rowsAffected == 0)
+                    {
+                        throw new InvalidOperationException("No row was inserted into Logs.");
+                    }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error inserting log: " + ex.Message);
+                // Show the error message for debugging
+                MessageBox.Show($"Error inserting log: {ex.Message}\n{ex.StackTrace}");
             }
         }
 
@@ -329,32 +352,45 @@ namespace IM101
         }
         private void remove_removebtn_Click(object sender, EventArgs e)
         {
+            // Ensure a row is selected
             if (supply_grid.SelectedRows.Count == 0)
             {
                 MessageBox.Show("Please select a row to delete.");
                 return;
             }
 
-            // Get the SupplyID from the selected row (adjust the column index if needed)
+            // Get the SupplyID from the selected row
             var selectedRow = supply_grid.SelectedRows[0];
             int supplyID = Convert.ToInt32(selectedRow.Cells["SupplyID"].Value);
 
+            // Confirmation dialog
+            DialogResult confirmation = MessageBox.Show(
+                "Are you sure you want to delete the selected Supply record?",
+                "Confirm Deletion", MessageBoxButtons.YesNo, MessageBoxIcon.Question );
+
+            // If user chooses "No," cancel the operation
+            if (confirmation == DialogResult.No)
+            {
+                return;
+            }
+
             string checkSupplyQuery = "SELECT COUNT(1) FROM Supply WHERE SupplyID = @SupplyID";
+            string deleteQuery = "DELETE FROM Supply WHERE SupplyID = @SupplyID";
 
             try
             {
+                // Open connection if necessary
                 if (checkConnection())
                 {
                     connect.Open();
                 }
 
-                // Check if the supply record exists for the specified SupplyID
+                // Check if the SupplyID exists
                 using (SqlCommand checkCommand = new SqlCommand(checkSupplyQuery, connect))
                 {
                     checkCommand.Parameters.AddWithValue("@SupplyID", supplyID);
 
                     int supplyExists = (int)checkCommand.ExecuteScalar();
-
                     if (supplyExists == 0)
                     {
                         MessageBox.Show("The SupplyID does not exist in the Supply table.");
@@ -362,29 +398,29 @@ namespace IM101
                     }
                 }
 
-                // Delete the supply record for the given SupplyID
-                string deleteQuery = "DELETE FROM Supply WHERE SupplyID = @SupplyID";
-
+                // Delete the record
                 using (SqlCommand deleteCommand = new SqlCommand(deleteQuery, connect))
                 {
                     deleteCommand.Parameters.AddWithValue("@SupplyID", supplyID);
                     deleteCommand.ExecuteNonQuery();
                 }
 
-                MessageBox.Show("Supply data for the specified SupplyID removed successfully!");
                 clearFields();
             }
             catch (Exception ex)
             {
+                // Handle any errors that occur
                 MessageBox.Show("An error occurred: " + ex.Message);
             }
             finally
             {
+                // Ensure the connection is closed
                 if (connect.State == ConnectionState.Open)
                 {
                     connect.Close();
                 }
 
+                // Refresh the supply grid
                 DisplayAllSupplies();
             }
         }
@@ -458,7 +494,6 @@ namespace IM101
 
         private void supply_unitcost_KeyDown(object sender, KeyEventArgs e)
         {
-            
             double supply_qty = 0;
             TextBox supply_qtyTextBox = supply_qtys; 
             if (double.TryParse(supply_qtyTextBox.Text, out supply_qty)) 

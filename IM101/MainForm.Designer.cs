@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.cashierCustomerForm1 = new System.Windows.Forms.Panel();
             this.supplier_btn = new System.Windows.Forms.Button();
@@ -50,7 +49,6 @@
             this.Day = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
-            this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.dashboard1 = new IM101.dashboard();
             this.categories1 = new IM101.categories();
             this.products1 = new IM101.products();
@@ -67,7 +65,6 @@
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             this.SuspendLayout();
             // 
             // cashierCustomerForm1
@@ -366,7 +363,7 @@
             // 
             // dashboard1
             // 
-            this.dashboard1.Location = new System.Drawing.Point(-1, -3);
+            this.dashboard1.Location = new System.Drawing.Point(-1, -2);
             this.dashboard1.Name = "dashboard1";
             this.dashboard1.Size = new System.Drawing.Size(1113, 512);
             this.dashboard1.TabIndex = 8;
@@ -450,7 +447,6 @@
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -469,7 +465,6 @@
         private System.Windows.Forms.Button dashboard_btn;
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.Label admin;
-        private System.Windows.Forms.BindingSource bindingSource1;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label Day;

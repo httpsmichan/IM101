@@ -38,6 +38,8 @@ namespace IM101
             categories1.Visible = false;
             placeorder1.Visible = false;
             orders1.Visible = false;
+            viewLogs1.Visible = false;
+            viewInventory1.Visible = false;
 
             visibleControl.Visible = true;
 
@@ -147,6 +149,30 @@ namespace IM101
         private void Day_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            ShowControl(viewInventory1);
+
+            viewInventory viewinv = viewInventory1 as viewInventory;
+
+            if (viewinv != null)
+            {
+                viewinv.refreshData();
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            ShowControl(viewLogs1);
+
+            viewLogs viewlog = viewLogs1 as viewLogs;
+
+            if (viewlog != null)
+            {
+                viewlog.refreshData();
+            }
         }
     }
 }

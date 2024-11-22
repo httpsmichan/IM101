@@ -153,6 +153,18 @@
       <DependentUpon>users.cs</DependentUpon>
     </Compile>
     <Compile Include="usersdata.cs" />
+    <Compile Include="viewInventory.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="viewInventory.Designer.cs">
+      <DependentUpon>viewInventory.cs</DependentUpon>
+    </Compile>
+    <Compile Include="viewLogs.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="viewLogs.Designer.cs">
+      <DependentUpon>viewLogs.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="CashierMainForm.resx">
       <DependentUpon>CashierMainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -203,6 +215,12 @@
     <EmbeddedResource Include="users.resx">
       <DependentUpon>users.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="viewInventory.resx">
+      <DependentUpon>viewInventory.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="viewLogs.resx">
+      <DependentUpon>viewLogs.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -227,6 +245,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\user.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\loupe1.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

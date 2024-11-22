@@ -43,15 +43,19 @@
             this.dashboard_btn = new System.Windows.Forms.Button();
             this.cashier = new System.Windows.Forms.Label();
             this.cashierCustomerForm1 = new System.Windows.Forms.Panel();
+            this.panel3 = new System.Windows.Forms.Panel();
+            this.pictureBox2 = new System.Windows.Forms.PictureBox();
+            this.pictureBox4 = new System.Windows.Forms.PictureBox();
+            this.button1 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
             this.dashboard1 = new IM101.dashboard();
+            this.viewInventory1 = new IM101.viewInventory();
+            this.viewLogs1 = new IM101.viewLogs();
             this.categories1 = new IM101.categories();
             this.products1 = new IM101.products();
             this.orders1 = new IM101.orders();
             this.placeorder1 = new IM101.placeorder();
             this.customers1 = new IM101.customers();
-            this.panel3 = new System.Windows.Forms.Panel();
-            this.pictureBox2 = new System.Windows.Forms.PictureBox();
-            this.pictureBox4 = new System.Windows.Forms.PictureBox();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel2.SuspendLayout();
@@ -127,6 +131,8 @@
             // 
             this.panel2.BackColor = System.Drawing.Color.Brown;
             this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.panel2.Controls.Add(this.button2);
+            this.panel2.Controls.Add(this.button1);
             this.panel2.Controls.Add(this.placeorder_btn);
             this.panel2.Controls.Add(this.logout_btn);
             this.panel2.Controls.Add(this.customer_btn);
@@ -256,6 +262,8 @@
             this.cashierCustomerForm1.BackColor = System.Drawing.Color.White;
             this.cashierCustomerForm1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.cashierCustomerForm1.Controls.Add(this.dashboard1);
+            this.cashierCustomerForm1.Controls.Add(this.viewInventory1);
+            this.cashierCustomerForm1.Controls.Add(this.viewLogs1);
             this.cashierCustomerForm1.Controls.Add(this.categories1);
             this.cashierCustomerForm1.Controls.Add(this.products1);
             this.cashierCustomerForm1.Controls.Add(this.orders1);
@@ -266,12 +274,93 @@
             this.cashierCustomerForm1.Size = new System.Drawing.Size(1113, 515);
             this.cashierCustomerForm1.TabIndex = 14;
             // 
+            // panel3
+            // 
+            this.panel3.BackColor = System.Drawing.Color.White;
+            this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.panel3.Controls.Add(this.pictureBox2);
+            this.panel3.Controls.Add(this.pictureBox4);
+            this.panel3.Controls.Add(this.cashier);
+            this.panel3.Location = new System.Drawing.Point(174, 41);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(1112, 100);
+            this.panel3.TabIndex = 13;
+            // 
+            // pictureBox2
+            // 
+            this.pictureBox2.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox2.Image")));
+            this.pictureBox2.Location = new System.Drawing.Point(1020, 8);
+            this.pictureBox2.Name = "pictureBox2";
+            this.pictureBox2.Size = new System.Drawing.Size(60, 60);
+            this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox2.TabIndex = 6;
+            this.pictureBox2.TabStop = false;
+            // 
+            // pictureBox4
+            // 
+            this.pictureBox4.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox4.Image")));
+            this.pictureBox4.Location = new System.Drawing.Point(8, 8);
+            this.pictureBox4.Name = "pictureBox4";
+            this.pictureBox4.Size = new System.Drawing.Size(160, 79);
+            this.pictureBox4.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox4.TabIndex = 5;
+            this.pictureBox4.TabStop = false;
+            // 
+            // button1
+            // 
+            this.button1.FlatAppearance.BorderSize = 0;
+            this.button1.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(38)))), ((int)(((byte)(38)))));
+            this.button1.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(38)))), ((int)(((byte)(38)))));
+            this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button1.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.button1.Location = new System.Drawing.Point(-1, 291);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(168, 42);
+            this.button1.TabIndex = 19;
+            this.button1.Text = "       Inventory";
+            this.button1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // button2
+            // 
+            this.button2.FlatAppearance.BorderSize = 0;
+            this.button2.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(38)))), ((int)(((byte)(38)))));
+            this.button2.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(38)))), ((int)(((byte)(38)))));
+            this.button2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.button2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button2.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.button2.Location = new System.Drawing.Point(-2, 339);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(168, 42);
+            this.button2.TabIndex = 20;
+            this.button2.Text = "       Logs";
+            this.button2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
+            // 
             // dashboard1
             // 
             this.dashboard1.Location = new System.Drawing.Point(-2, -2);
             this.dashboard1.Name = "dashboard1";
             this.dashboard1.Size = new System.Drawing.Size(1113, 512);
-            this.dashboard1.TabIndex = 5;
+            this.dashboard1.TabIndex = 7;
+            // 
+            // viewInventory1
+            // 
+            this.viewInventory1.BackColor = System.Drawing.Color.White;
+            this.viewInventory1.Location = new System.Drawing.Point(-1, -2);
+            this.viewInventory1.Name = "viewInventory1";
+            this.viewInventory1.Size = new System.Drawing.Size(1115, 513);
+            this.viewInventory1.TabIndex = 6;
+            // 
+            // viewLogs1
+            // 
+            this.viewLogs1.Location = new System.Drawing.Point(-2, -2);
+            this.viewLogs1.Name = "viewLogs1";
+            this.viewLogs1.Size = new System.Drawing.Size(1115, 513);
+            this.viewLogs1.TabIndex = 5;
             // 
             // categories1
             // 
@@ -307,38 +396,6 @@
             this.customers1.Name = "customers1";
             this.customers1.Size = new System.Drawing.Size(1113, 512);
             this.customers1.TabIndex = 0;
-            // 
-            // panel3
-            // 
-            this.panel3.BackColor = System.Drawing.Color.White;
-            this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.panel3.Controls.Add(this.pictureBox2);
-            this.panel3.Controls.Add(this.pictureBox4);
-            this.panel3.Controls.Add(this.cashier);
-            this.panel3.Location = new System.Drawing.Point(174, 41);
-            this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(1112, 100);
-            this.panel3.TabIndex = 13;
-            // 
-            // pictureBox2
-            // 
-            this.pictureBox2.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox2.Image")));
-            this.pictureBox2.Location = new System.Drawing.Point(1020, 8);
-            this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(60, 60);
-            this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox2.TabIndex = 6;
-            this.pictureBox2.TabStop = false;
-            // 
-            // pictureBox4
-            // 
-            this.pictureBox4.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox4.Image")));
-            this.pictureBox4.Location = new System.Drawing.Point(8, 8);
-            this.pictureBox4.Name = "pictureBox4";
-            this.pictureBox4.Size = new System.Drawing.Size(160, 79);
-            this.pictureBox4.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox4.TabIndex = 5;
-            this.pictureBox4.TabStop = false;
             // 
             // CashierMainForm
             // 
@@ -385,10 +442,14 @@
         private System.Windows.Forms.PictureBox pictureBox2;
         private System.Windows.Forms.PictureBox pictureBox4;
         private customers customers1;
-        private dashboard dashboard1;
         private categories categories1;
         private products products1;
         private orders orders1;
         private placeorder placeorder1;
+        private dashboard dashboard1;
+        private viewInventory viewInventory1;
+        private viewLogs viewLogs1;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button button1;
     }
 }

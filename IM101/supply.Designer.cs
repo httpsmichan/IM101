@@ -32,7 +32,6 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.supply_supplierID = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.remove_removebtn = new System.Windows.Forms.Button();
             this.supply_clearbtn = new System.Windows.Forms.Button();
             this.supply_addbtn = new System.Windows.Forms.Button();
             this.supply_status = new System.Windows.Forms.ComboBox();
@@ -53,6 +52,7 @@
             this.supply_search = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.remove_removebtn = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.supply_grid)).BeginInit();
@@ -79,18 +79,6 @@
             this.label9.Size = new System.Drawing.Size(73, 16);
             this.label9.TabIndex = 50;
             this.label9.Text = "Supplier ID";
-            // 
-            // remove_removebtn
-            // 
-            this.remove_removebtn.BackColor = System.Drawing.Color.Firebrick;
-            this.remove_removebtn.ForeColor = System.Drawing.Color.White;
-            this.remove_removebtn.Location = new System.Drawing.Point(107, 455);
-            this.remove_removebtn.Name = "remove_removebtn";
-            this.remove_removebtn.Size = new System.Drawing.Size(90, 38);
-            this.remove_removebtn.TabIndex = 62;
-            this.remove_removebtn.Text = "Remove";
-            this.remove_removebtn.UseVisualStyleBackColor = false;
-            this.remove_removebtn.Click += new System.EventHandler(this.remove_removebtn_Click);
             // 
             // supply_clearbtn
             // 
@@ -255,6 +243,7 @@
             // 
             // pictureBox1
             // 
+            this.pictureBox1.Image = global::IM101.Properties.Resources.loupe;
             this.pictureBox1.Location = new System.Drawing.Point(864, 7);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(20, 20);
@@ -339,6 +328,18 @@
             this.panel2.Size = new System.Drawing.Size(204, 508);
             this.panel2.TabIndex = 3;
             // 
+            // remove_removebtn
+            // 
+            this.remove_removebtn.BackColor = System.Drawing.Color.Firebrick;
+            this.remove_removebtn.ForeColor = System.Drawing.Color.White;
+            this.remove_removebtn.Location = new System.Drawing.Point(107, 455);
+            this.remove_removebtn.Name = "remove_removebtn";
+            this.remove_removebtn.Size = new System.Drawing.Size(90, 38);
+            this.remove_removebtn.TabIndex = 62;
+            this.remove_removebtn.Text = "Remove";
+            this.remove_removebtn.UseVisualStyleBackColor = false;
+            this.remove_removebtn.Click += new System.EventHandler(this.remove_removebtn_Click);
+            // 
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.Color.White;
@@ -375,7 +376,6 @@
 
         private System.Windows.Forms.TextBox supply_supplierID;
         private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.Button remove_removebtn;
         private System.Windows.Forms.Button supply_clearbtn;
         private System.Windows.Forms.Button supply_addbtn;
         private System.Windows.Forms.ComboBox supply_status;
@@ -397,5 +397,6 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Button remove_removebtn;
     }
 }

@@ -246,6 +246,7 @@
             // 
             // pictureBox1
             // 
+            this.pictureBox1.Image = global::IM101.Properties.Resources.loupe;
             this.pictureBox1.Location = new System.Drawing.Point(868, 14);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(20, 20);

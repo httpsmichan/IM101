@@ -15,7 +15,8 @@ namespace IM101
         public string QuantityChange { get; set; }
         public int? PrevStock { get; set; } 
         public int? NewStock { get; set; } 
-        public string Staff { get; set; } 
+        public string Staff { get; set; }
+        public string IDs { get; set; }
         public string Date { get; set; }
 
 
@@ -45,6 +46,7 @@ namespace IM101
                             PrevStock = reader["PrevStock"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["PrevStock"]),
                             NewStock = reader["NewStock"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["NewStock"]),
                             Staff = reader["Staff"] == DBNull.Value ? null : reader["Staff"].ToString(),
+                            IDs = reader["IDs"] == DBNull.Value ? null : reader["IDs"].ToString(),
                             Date = reader.IsDBNull(reader.GetOrdinal("Date"))
                                     ? string.Empty 
                                     : Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd") 
@@ -98,6 +100,7 @@ namespace IM101
                             PrevStock = reader["PrevStock"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["PrevStock"]),
                             NewStock = reader["NewStock"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["NewStock"]),
                             Staff = reader["Staff"] == DBNull.Value ? null : reader["Staff"].ToString(),
+                            IDs = reader["IDs"] == DBNull.Value ? null : reader["IDs"].ToString(),
                             Date = reader.IsDBNull(reader.GetOrdinal("Date")) ? string.Empty : Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd")
                         };
 

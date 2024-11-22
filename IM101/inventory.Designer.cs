@@ -35,9 +35,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.inventory_upbtn = new System.Windows.Forms.Button();
             this.inventory_stock = new System.Windows.Forms.TextBox();
-            this.inventory_removebtn = new System.Windows.Forms.Button();
             this.inventory_clearbtn = new System.Windows.Forms.Button();
-            this.inventory_addbtn = new System.Windows.Forms.Button();
             this.inventory_prodID = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -59,6 +57,7 @@
             // 
             // pictureBox1
             // 
+            this.pictureBox1.Image = global::IM101.Properties.Resources.loupe;
             this.pictureBox1.Location = new System.Drawing.Point(868, 14);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(20, 20);
@@ -90,7 +89,7 @@
             // 
             this.inventory_upbtn.BackColor = System.Drawing.Color.Firebrick;
             this.inventory_upbtn.ForeColor = System.Drawing.Color.White;
-            this.inventory_upbtn.Location = new System.Drawing.Point(107, 397);
+            this.inventory_upbtn.Location = new System.Drawing.Point(107, 452);
             this.inventory_upbtn.Name = "inventory_upbtn";
             this.inventory_upbtn.Size = new System.Drawing.Size(90, 38);
             this.inventory_upbtn.TabIndex = 48;
@@ -105,41 +104,17 @@
             this.inventory_stock.Size = new System.Drawing.Size(154, 20);
             this.inventory_stock.TabIndex = 47;
             // 
-            // inventory_removebtn
-            // 
-            this.inventory_removebtn.BackColor = System.Drawing.Color.Firebrick;
-            this.inventory_removebtn.ForeColor = System.Drawing.Color.White;
-            this.inventory_removebtn.Location = new System.Drawing.Point(107, 455);
-            this.inventory_removebtn.Name = "inventory_removebtn";
-            this.inventory_removebtn.Size = new System.Drawing.Size(90, 38);
-            this.inventory_removebtn.TabIndex = 46;
-            this.inventory_removebtn.Text = "Remove";
-            this.inventory_removebtn.UseVisualStyleBackColor = false;
-            this.inventory_removebtn.Click += new System.EventHandler(this.inventory_removebtn_Click);
-            // 
             // inventory_clearbtn
             // 
             this.inventory_clearbtn.BackColor = System.Drawing.Color.Firebrick;
             this.inventory_clearbtn.ForeColor = System.Drawing.Color.White;
-            this.inventory_clearbtn.Location = new System.Drawing.Point(11, 455);
+            this.inventory_clearbtn.Location = new System.Drawing.Point(11, 452);
             this.inventory_clearbtn.Name = "inventory_clearbtn";
             this.inventory_clearbtn.Size = new System.Drawing.Size(90, 38);
             this.inventory_clearbtn.TabIndex = 45;
             this.inventory_clearbtn.Text = "Clear";
             this.inventory_clearbtn.UseVisualStyleBackColor = false;
             this.inventory_clearbtn.Click += new System.EventHandler(this.inventory_clearbtn_Click);
-            // 
-            // inventory_addbtn
-            // 
-            this.inventory_addbtn.BackColor = System.Drawing.Color.Firebrick;
-            this.inventory_addbtn.ForeColor = System.Drawing.Color.White;
-            this.inventory_addbtn.Location = new System.Drawing.Point(11, 397);
-            this.inventory_addbtn.Name = "inventory_addbtn";
-            this.inventory_addbtn.Size = new System.Drawing.Size(90, 38);
-            this.inventory_addbtn.TabIndex = 43;
-            this.inventory_addbtn.Text = "Add";
-            this.inventory_addbtn.UseVisualStyleBackColor = false;
-            this.inventory_addbtn.Click += new System.EventHandler(this.inventory_addbtn_Click);
             // 
             // inventory_prodID
             // 
@@ -256,9 +231,7 @@
             this.panel2.Controls.Add(this.label4);
             this.panel2.Controls.Add(this.inventory_upbtn);
             this.panel2.Controls.Add(this.inventory_stock);
-            this.panel2.Controls.Add(this.inventory_removebtn);
             this.panel2.Controls.Add(this.inventory_clearbtn);
-            this.panel2.Controls.Add(this.inventory_addbtn);
             this.panel2.Controls.Add(this.inventory_prodID);
             this.panel2.Controls.Add(this.label1);
             this.panel2.Controls.Add(this.label3);
@@ -337,9 +310,7 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button inventory_upbtn;
         private System.Windows.Forms.TextBox inventory_stock;
-        private System.Windows.Forms.Button inventory_removebtn;
         private System.Windows.Forms.Button inventory_clearbtn;
-        private System.Windows.Forms.Button inventory_addbtn;
         private System.Windows.Forms.TextBox inventory_prodID;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label3;
