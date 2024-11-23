@@ -249,17 +249,17 @@ namespace IM101
             usersdata uData = new usersdata();
             List<usersdata> filteredData;
 
-            // Check if the search text is empty or contains the placeholder text
+
             if (string.IsNullOrWhiteSpace(staff_search.Text) || staff_search.Text == "Search StaffID or Username")
             {
-                filteredData = uData.AllUsersData(); // Show all users if search is empty or placeholder
+                filteredData = uData.AllUsersData(); 
             }
             else
             {
-                filteredData = uData.SearchUsers(staff_search.Text.Trim()); // Filter users based on search term
+                filteredData = uData.SearchUsers(staff_search.Text.Trim()); 
             }
 
-            adduser_dataGrid.DataSource = filteredData; // Update the DataGrid with filtered data
+            adduser_dataGrid.DataSource = filteredData; 
         }
 
         private void staff_search_Leave(object sender, EventArgs e)
@@ -267,21 +267,21 @@ namespace IM101
             if (string.IsNullOrWhiteSpace(staff_search.Text))
             {
                 staff_search.Text = "Search StaffID or Username";
-                staff_search.ForeColor = Color.Gray; // Set the color to gray for placeholder
+                staff_search.ForeColor = Color.Gray; 
             }
             else
             {
-                staff_search.ForeColor = Color.Black; // Set text color to black if there's input
+                staff_search.ForeColor = Color.Black; 
             }
         }
 
         private void staff_search_Enter(object sender, EventArgs e)
         {
-            // Clear the placeholder text when focusing on the search field
+
             if (staff_search.Text == "Search StaffID or Username")
             {
                 staff_search.Text = "";
-                staff_search.ForeColor = Color.Black; // Set the text color to black while typing
+                staff_search.ForeColor = Color.Black; 
             }
         }
 

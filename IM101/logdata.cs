@@ -82,7 +82,7 @@ namespace IM101
             SELECT * FROM Logs
             WHERE ActionType LIKE @searchTerm 
                OR ProductID LIKE @searchTerm
-               OR Staff LIKE @searchTerm"; // Add Staff to the WHERE clause
+               OR Staff LIKE @searchTerm"; 
 
                 using (SqlCommand cmd = new SqlCommand(searchQuery, connect))
                 {

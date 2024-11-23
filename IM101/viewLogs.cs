@@ -46,40 +46,40 @@ namespace IM101
             logdata logData = new logdata();
             List<logdata> filteredData;
 
-            // Check if the search text is empty or contains the placeholder text
+
             if (string.IsNullOrWhiteSpace(viewlog_search.Text) || viewlog_search.Text == "Search ActionType or ProductID")
             {
-                filteredData = logData.GetAllLogs(); // Show all logs if search is empty or placeholder
+                filteredData = logData.GetAllLogs(); 
             }
             else
             {
-                filteredData = logData.SearchLogs(viewlog_search.Text.Trim()); // Filter logs based on search term
+                filteredData = logData.SearchLogs(viewlog_search.Text.Trim()); 
             }
 
-            view_logs.DataSource = filteredData; // Update the DataGrid with filtered data
+            view_logs.DataSource = filteredData; 
         }
 
         private void viewlog_search_Leave(object sender, EventArgs e)
         {
-            // Restore placeholder text if the search box is empty
+
             if (string.IsNullOrWhiteSpace(viewlog_search.Text))
             {
                 viewlog_search.Text = "Search ActionType or ProductID";
-                viewlog_search.ForeColor = Color.Gray; // Set the color to gray for placeholder
+                viewlog_search.ForeColor = Color.Gray; 
             }
             else
             {
-                viewlog_search.ForeColor = Color.Black; // Set text color to black if there's input
+                viewlog_search.ForeColor = Color.Black; 
             }
         }
 
         private void viewlog_search_Enter(object sender, EventArgs e)
         {
-            // Clear the placeholder text when focusing on the search field
+
             if (viewlog_search.Text == "Search ActionType or ProductID")
             {
                 viewlog_search.Text = "";
-                viewlog_search.ForeColor = Color.Black; // Set the text color to black while typing
+                viewlog_search.ForeColor = Color.Black; 
             }
         }
 

@@ -166,10 +166,10 @@ namespace IM101
                     {
                         localConnect.Open();
 
-                        // Insert Billing and Payment
+
                         int billNo = InsertBillingAndPayment(localConnect, today);
 
-                        // Insert Logs, Delete from Purchase, and Update Inventory
+
                         var productAggregates = AggregateProducts();
                         InsertLogsAndUpdateInventory(localConnect, productAggregates, today, billNo);
 
@@ -238,7 +238,7 @@ namespace IM101
 
         private void InsertLogsAndUpdateInventory(SqlConnection connection, Dictionary<int, int> productAggregates, DateTime today, int billNo)
         {
-            // Ensure the connection is open
+
             if (connection.State != System.Data.ConnectionState.Open)
             {
                 connection.Open();
@@ -249,13 +249,13 @@ namespace IM101
                 int productID = entry.Key;
                 int totalQuantityChange = entry.Value;
 
-                // Fetch the current stock from the inventory
+
                 int prevStock = GetCurrentStock(connection, productID);
-                int newStock = prevStock - totalQuantityChange; // Calculate the new stock
+                int newStock = prevStock - totalQuantityChange; 
                 int pstock = RecentStock(connection, productID);
                 int nstock = pstock;
 
-                // Fetch the correct InventoryID for the given ProductID
+
                 int relatedInventoryID = 0;
                 using (var getSupplyIDCmd = new SqlCommand(@"
             SELECT InventoryID 
@@ -271,7 +271,7 @@ namespace IM101
                     }
                 }
 
-                // Log the "Order Purchase" transaction
+
                 string insertLogQuery = @"
             INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Date, IDs) 
             VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @date, @ids)";
@@ -282,35 +282,34 @@ namespace IM101
 
                     cmdLog.Parameters.AddWithValue("@actionType", "Order Purchase");
                     cmdLog.Parameters.AddWithValue("@prodID", productID);
-                    cmdLog.Parameters.AddWithValue("@quantityChange", -totalQuantityChange); // Negative for purchase
+                    cmdLog.Parameters.AddWithValue("@quantityChange", -totalQuantityChange);
                     cmdLog.Parameters.AddWithValue("@prevStock", prevStock);
                     cmdLog.Parameters.AddWithValue("@newStock", newStock);
                     cmdLog.Parameters.AddWithValue("@staff", "@" + username);
                     cmdLog.Parameters.AddWithValue("@date", today);
-                    cmdLog.Parameters.AddWithValue("@ids", "InventoryID: " + relatedInventoryID); // Pass the related InventoryID
+                    cmdLog.Parameters.AddWithValue("@ids", "InventoryID: " + relatedInventoryID); 
                     cmdLog.ExecuteNonQuery();
                 }
 
-                // If stock is zero, insert the "Stock at Capacity" log, delete Inventory, and update inventory record
+
                 if (newStock == 0)
                 {
-                    // Log the "Stock at Capacity" transaction using the same InventoryID
+
                     using (var cmdStockCapacityLog = new SqlCommand(insertLogQuery, connection))
                     {
                         string username = Form1.username.Substring(0, 1).ToUpper() + Form1.username.Substring(1).ToLower();
 
                         cmdStockCapacityLog.Parameters.AddWithValue("@actionType", "Stock at Capacity");
                         cmdStockCapacityLog.Parameters.AddWithValue("@prodID", productID);
-                        cmdStockCapacityLog.Parameters.AddWithValue("@quantityChange", 0); // No stock change
-                        cmdStockCapacityLog.Parameters.AddWithValue("@prevStock", pstock); // From the most recent log
-                        cmdStockCapacityLog.Parameters.AddWithValue("@newStock", nstock); // Same as prevStock
+                        cmdStockCapacityLog.Parameters.AddWithValue("@quantityChange", 0); 
+                        cmdStockCapacityLog.Parameters.AddWithValue("@prevStock", pstock); 
+                        cmdStockCapacityLog.Parameters.AddWithValue("@newStock", nstock); 
                         cmdStockCapacityLog.Parameters.AddWithValue("@staff", "@" + username);
                         cmdStockCapacityLog.Parameters.AddWithValue("@date", today);
-                        cmdStockCapacityLog.Parameters.AddWithValue("@ids", "InventoryID: " + relatedInventoryID); // Same InventoryID
+                        cmdStockCapacityLog.Parameters.AddWithValue("@ids", "InventoryID: " + relatedInventoryID); 
                         cmdStockCapacityLog.ExecuteNonQuery();
                     }
 
-                    // Update the inventory to set Stocks to 0 for this InventoryID
                     string updateInventoryQuery = @"
                 UPDATE Inventory 
                 SET Stocks = 0 
@@ -322,7 +321,7 @@ namespace IM101
                         cmdUpdateInventory.ExecuteNonQuery();
                     }
 
-                    // Delete the Inventory record once stock is zero
+
                     string deleteInventoryQuery = @"
                 DELETE FROM Inventory
                 WHERE InventoryID = @InventoryID";
@@ -334,18 +333,18 @@ namespace IM101
                     }
                 }
 
-                // Update the inventory stock (even if it's not zero, adjust the remaining stock)
+
                 UpdateInventory(connection, productID, totalQuantityChange);
             }
 
-            // Delete the purchase data after processing the order
+
             using (var cmdDelete = new SqlCommand("DELETE FROM Purchase WHERE CustomerID = @cID", connection))
             {
-                cmdDelete.Parameters.AddWithValue("@cID", billNo); // Assuming billNo is the CustomerID here
+                cmdDelete.Parameters.AddWithValue("@cID", billNo);
                 cmdDelete.ExecuteNonQuery();
             }
 
-            // Optionally, close the connection if you're done with it
+
             connection.Close();
         }
 

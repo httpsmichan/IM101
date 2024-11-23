@@ -178,41 +178,41 @@ namespace IM101
             inventorydata iData = new inventorydata();
             List<inventorydata> filteredData;
 
-            // Check if the search text is empty or contains the placeholder text
+
             if (string.IsNullOrWhiteSpace(inventory_search.Text) || inventory_search.Text == "Search Product")
             {
-                filteredData = iData.AllInventoryData(); // Show all inventory items if search is empty or placeholder
+                filteredData = iData.AllInventoryData(); 
             }
             else
             {
-                filteredData = iData.SearchInventory(inventory_search.Text.Trim()); // Filter inventory based on search term
+                filteredData = iData.SearchInventory(inventory_search.Text.Trim()); 
             }
 
-            inventory_grid.DataSource = filteredData; // Update the DataGrid with filtered data
+            inventory_grid.DataSource = filteredData; 
         }
 
         private void inventory_search_Leave(object sender, EventArgs e)
         {
-            // Restore placeholder text if the search box is empty
+
             if (string.IsNullOrWhiteSpace(inventory_search.Text))
             {
                 inventory_search.Text = "Search Product";
-                inventory_search.ForeColor = Color.Gray; // Set the color to gray for placeholder
+                inventory_search.ForeColor = Color.Gray; 
             }
             else
             {
-                inventory_search.ForeColor = Color.Black; // Set text color to black if there's input
+                inventory_search.ForeColor = Color.Black; 
             }
         }
 
         private void inventory_search_Enter(object sender, EventArgs e)
         {
 
-            // Clear the placeholder text when focusing on the search field
+
             if (inventory_search.Text == "Search Product")
             {
                 inventory_search.Text = "";
-                inventory_search.ForeColor = Color.Black; // Set the text color to black while typing
+                inventory_search.ForeColor = Color.Black; 
             }
         }
 

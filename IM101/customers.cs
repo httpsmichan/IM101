@@ -47,17 +47,16 @@ namespace IM101
             customersdata cData = new customersdata();
             List<customersdata> filteredData;
 
-            // Check if the search text is empty or contains the placeholder text
             if (string.IsNullOrWhiteSpace(customer_search.Text) || customer_search.Text == "Search CustomerID")
             {
-                filteredData = cData.allCustomers(); // Show all customers if search is empty or placeholder
+                filteredData = cData.allCustomers(); 
             }
             else
             {
-                filteredData = cData.SearchCustomers(customer_search.Text.Trim()); // Filter customers based on search term
+                filteredData = cData.SearchCustomers(customer_search.Text.Trim()); 
             }
 
-            dataGridView_Customers.DataSource = filteredData; // Update the DataGrid with filtered data
+            dataGridView_Customers.DataSource = filteredData; 
         }
 
         private void customer_search_Leave(object sender, EventArgs e)
@@ -65,21 +64,20 @@ namespace IM101
             if (string.IsNullOrWhiteSpace(customer_search.Text))
             {
                 customer_search.Text = "Search CustomerID";
-                customer_search.ForeColor = Color.Gray; // Set the color to gray for placeholder
+                customer_search.ForeColor = Color.Gray; 
             }
             else
             {
-                customer_search.ForeColor = Color.Black; // Set text color to black if there's input
+                customer_search.ForeColor = Color.Black; 
             }
         }
 
         private void customer_search_Enter(object sender, EventArgs e)
         {
-            // Clear the placeholder text when focusing on the search field
             if (customer_search.Text == "Search CustomerID")
             {
                 customer_search.Text = "";
-                customer_search.ForeColor = Color.Black; // Set the text color to black while typing
+                customer_search.ForeColor = Color.Black; 
             }
         }
 

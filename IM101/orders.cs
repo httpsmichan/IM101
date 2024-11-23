@@ -188,7 +188,7 @@ namespace IM101
                 float price = 0;
                 int productID = int.Parse(enterprodID.Text.Trim());
 
-                // Query product details
+
                 string selectData = @"
             SELECT p.ProductName, p.Price, p.Category, i.Stocks, i.Amount
             FROM Product p
@@ -224,7 +224,7 @@ namespace IM101
                     float subtotal = price * quantity;
                     DateTime today = DateTime.Today;
 
-                    // Insert data into Purchase table
+
                     string insertData = @"INSERT INTO Purchase (CustomerID, ProductID, ProductName, Category, Quantity, Unit, OriginalPrice, Subtotal, OrderDate) 
                 VALUES (@catID, @prodID, @prodName, @category, @qty, @unit, @price, @subtotal, @orderDate)";
 
@@ -370,39 +370,39 @@ namespace IM101
             productdata proddata = new productdata();
             List<productdata> filteredData;
 
-            // Check if the search text is empty or contains the placeholder text
+
             if (string.IsNullOrWhiteSpace(textBox1.Text) || textBox1.Text == "Search Product")
             {
-                filteredData = proddata.allAvailableProducts(); // Show all products if search is empty or placeholder
+                filteredData = proddata.allAvailableProducts(); 
             }
             else
             {
-                filteredData = proddata.SearchProducts(textBox1.Text.Trim()); // Filter products based on search term
+                filteredData = proddata.SearchProducts(textBox1.Text.Trim()); 
             }
 
-            order_Gridview1.DataSource = filteredData; // Update the DataGrid with filtered data
+            order_Gridview1.DataSource = filteredData;
         }
 
         private void textBox1_Leave(object sender, EventArgs e)
-        {// Restore placeholder text if the search box is empty
+        {
             if (string.IsNullOrWhiteSpace(textBox1.Text))
             {
                 textBox1.Text = "Search Product";
-                textBox1.ForeColor = Color.Gray; // Set the color to gray for placeholder
+                textBox1.ForeColor = Color.Gray; 
             }
             else
             {
-                textBox1.ForeColor = Color.Black; // Set text color to black if there's input
+                textBox1.ForeColor = Color.Black; 
             }
         }
 
         private void textBox1_Enter(object sender, EventArgs e)
         {
-            // Clear the placeholder text when focusing on the search field
+
             if (textBox1.Text == "Search Product")
             {
                 textBox1.Text = "";
-                textBox1.ForeColor = Color.Black; // Set the text color to black while typing
+                textBox1.ForeColor = Color.Black; 
             }
         }
 
@@ -422,13 +422,13 @@ namespace IM101
                         {
                             connect.Open();
 
-                            // Query to get product details and available stock (without updating)
+
                             string selectData = @"
                     SELECT p.ProductName, p.Price, i.InventoryID, i.Stocks 
                     FROM Product p 
                     JOIN Inventory i ON p.ProductID = i.ProductID 
                     WHERE p.ProductID = @enteredValue AND p.Status = @status
-                    ORDER BY i.InventoryID ASC"; // Ensures the stocks are processed in ascending order of InventoryID
+                    ORDER BY i.InventoryID ASC"; 
 
                             using (SqlCommand cmd = new SqlCommand(selectData, connect))
                             {
@@ -443,23 +443,23 @@ namespace IM101
                                         float prodPrice = 0;
                                         int totalStock = 0;
 
-                                        // Loop through the rows, fetching product details and stock information
+
                                         while (reader.Read())
                                         {
-                                            if (prodName == "") // Fetch product details only once
+                                            if (prodName == "") 
                                             {
                                                 prodName = reader["ProductName"].ToString();
                                                 prodPrice = Convert.ToSingle(reader["Price"]);
                                             }
 
-                                            // Accumulate the total stock from all inventory rows
+
                                             totalStock += Convert.ToInt32(reader["Stocks"]);
                                         }
 
-                                        // Now that we have all product and inventory data, display the information
+
                                         order_prodName.Text = prodName;
                                         order_price.Text = prodPrice.ToString("0.00");
-                                        order_Remstock.Text = totalStock.ToString(); // Show total stock available
+                                        order_Remstock.Text = totalStock.ToString(); 
                                     }
                                     else
                                     {

@@ -57,7 +57,6 @@ namespace IM101
                 {
                     connect.Open();
 
-                    // Use LIKE for partial matching on category, and check if searchTerm matches categoryid exactly (by casting)
                     string selectData = @"
                 SELECT * 
                 FROM Category 
@@ -65,9 +64,8 @@ namespace IM101
                       CAST(categoryid AS VARCHAR) = @searchExact";
                     using (SqlCommand cmd = new SqlCommand(selectData, connect))
                     {
-                        // Define parameters for the search term
                         cmd.Parameters.AddWithValue("@search", "%" + searchTerm + "%");
-                        cmd.Parameters.AddWithValue("@searchExact", searchTerm); // Exact match for categoryid
+                        cmd.Parameters.AddWithValue("@searchExact", searchTerm);
 
                         SqlDataReader reader = cmd.ExecuteReader();
                         while (reader.Read())

@@ -11,6 +11,7 @@ using System.Windows.Forms;
 
 namespace IM101
 {
+
     public partial class categories : UserControl
     {
         SqlConnection connect = new SqlConnection(@"Data Source=SHINE;Initial Catalog=FuntilonDatabase;Integrated Security=True;Encrypt=True;TrustServerCertificate=True");
@@ -179,7 +180,6 @@ namespace IM101
                         {
                             connect.Open();
 
-                            // First, delete records in Supply that reference the products in this category
                             string deleteSupplies = "DELETE FROM Supply WHERE ProductID IN (SELECT ProductID FROM Product WHERE Category = @cat)";
                             using (SqlCommand deleteSuppliesCmd = new SqlCommand(deleteSupplies, connect))
                             {
@@ -187,7 +187,6 @@ namespace IM101
                                 deleteSuppliesCmd.ExecuteNonQuery();
                             }
 
-                            // Next, delete the products associated with the category
                             string removeProducts = "DELETE FROM Product WHERE Category = @cat";
                             using (SqlCommand deleteProductsCmd = new SqlCommand(removeProducts, connect))
                             {
@@ -195,7 +194,6 @@ namespace IM101
                                 deleteProductsCmd.ExecuteNonQuery();
                             }
 
-                            // Now delete the category itself
                             string removeCategory = "DELETE FROM Category WHERE categoryid = @id";
                             using (SqlCommand deleteCategoryCmd = new SqlCommand(removeCategory, connect))
                             {

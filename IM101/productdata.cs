@@ -31,7 +31,7 @@ namespace IM101
                 {
                     SqlDataReader reader = cmd.ExecuteReader();
 
-                    if (reader.HasRows) // Check if any rows are returned
+                    if (reader.HasRows) 
                     {
                         while (reader.Read())
                         {
@@ -43,7 +43,7 @@ namespace IM101
                                 Price = reader["Price"].ToString(),
                                 Status = reader["Status"].ToString(),
 
-                                // Format the date to show only the date portion
+
                                 Date = Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd")
                             };
                             listData.Add(proddata);
@@ -85,7 +85,7 @@ namespace IM101
                             Price = reader["Price"].ToString(),
                             Status = reader["Status"].ToString(),
 
-                            // Format the date to show only the date portion
+
                             Date = Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd")
                         };
 
@@ -108,7 +108,7 @@ namespace IM101
                 {
                     connect.Open();
 
-                    // Ensure that you are searching correctly across different fields
+
                     string selectData = @"
                 SELECT * 
                 FROM Product 
@@ -119,7 +119,7 @@ namespace IM101
 
                     using (SqlCommand cmd = new SqlCommand(selectData, connect))
                     {
-                        cmd.Parameters.AddWithValue("@search", "%" + searchTerm + "%"); // Secure parameterized query
+                        cmd.Parameters.AddWithValue("@search", "%" + searchTerm + "%"); 
 
                         SqlDataReader reader = cmd.ExecuteReader();
 
@@ -127,13 +127,13 @@ namespace IM101
                         {
                             productdata proddata = new productdata
                             {
-                                // Use null checks to safely extract values
+
                                 ProductID = reader["ProductID"] != DBNull.Value ? Convert.ToInt32(reader["ProductID"]) : 0,
                                 ProductName = reader["ProductName"] != DBNull.Value ? reader["ProductName"].ToString() : string.Empty,
                                 Category = reader["Category"] != DBNull.Value ? reader["Category"].ToString() : string.Empty,
-                                Price = reader["Price"] != DBNull.Value ? reader["Price"].ToString() : "0",  // Price can default to "0" if null
-                                Status = reader["Status"] != DBNull.Value ? reader["Status"].ToString() : "Unknown",  // Default to "Unknown"
-                                Date = reader["Date"] != DBNull.Value ? Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd") : "N/A"  // Format Date or return "N/A"
+                                Price = reader["Price"] != DBNull.Value ? reader["Price"].ToString() : "0",  
+                                Status = reader["Status"] != DBNull.Value ? reader["Status"].ToString() : "Unknown", 
+                                Date = reader["Date"] != DBNull.Value ? Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd") : "N/A"  
                             };
 
                             listData.Add(proddata);
@@ -142,7 +142,7 @@ namespace IM101
                 }
                 catch (Exception ex)
                 {
-                    // Catch and display detailed errors
+
                     MessageBox.Show("Error while searching products: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }

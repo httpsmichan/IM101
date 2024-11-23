@@ -32,7 +32,7 @@ namespace IM101
                     connect.Open();
 
                     int custID = 0;
-                    // Fetch the CustomerID for the current session or last inserted
+
                     string selectCustData = "SELECT MAX(CustomerID) FROM Purchase";
 
                     using (SqlCommand cmd = new SqlCommand(selectCustData, connect))
@@ -45,15 +45,15 @@ namespace IM101
                         else
                         {
                             Console.WriteLine("Error fetching CustomerID");
-                            return listData; // Return an empty list to avoid further processing
+                            return listData; 
                         }
                     }
 
-                    // Fetch data for the current CustomerID
+
                     string selectData = @"
             SELECT ProductID, ProductName, OriginalPrice, Quantity, Unit, Subtotal, OrderDate
             FROM Purchase
-            WHERE CustomerID = @custID"; // Added WHERE clause to filter by CustomerID
+            WHERE CustomerID = @custID";
 
                     using (SqlCommand cmd = new SqlCommand(selectData, connect))
                     {

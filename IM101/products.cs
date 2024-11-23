@@ -143,22 +143,22 @@ namespace IM101
                         {
                             connect.Open();
 
-                            // Prepare the SQL UPDATE statement for the Product table
+
                             string updateData = "UPDATE Product SET ProductName = @prodname, Category = @cat, " +
                                 "Price = @price, Status = @status, Date = @date WHERE ProductID = @prodID";
 
                             using (SqlCommand updateD = new SqlCommand(updateData, connect))
                             {
-                                // Assign ProductName
+
                                 updateD.Parameters.AddWithValue("@prodName", addprod_name.Text.Trim());
 
-                                // Assign Category (use DBNull.Value if null)
+
                                 if (addprod_category.SelectedItem != null)
                                     updateD.Parameters.AddWithValue("@cat", addprod_category.SelectedItem.ToString());
                                 else
                                     updateD.Parameters.AddWithValue("@cat", DBNull.Value);
 
-                                // Ensure Price is a valid decimal before passing it to the SQL query
+
                                 if (decimal.TryParse(addprod_price.Text.Trim(), out decimal price))
                                 {
                                     updateD.Parameters.AddWithValue("@price", price);
@@ -169,23 +169,23 @@ namespace IM101
                                     return;
                                 }
 
-                                // Assign Status (use DBNull.Value if null)
+
                                 if (addprod_status.SelectedItem != null)
                                     updateD.Parameters.AddWithValue("@status", addprod_status.SelectedItem.ToString());
                                 else
                                     updateD.Parameters.AddWithValue("@status", DBNull.Value);
 
-                                // Assign Date (today's date)
+
                                 DateTime today = DateTime.Today;
                                 updateD.Parameters.AddWithValue("@date", today);
 
-                                // Assign ProductID
+
                                 updateD.Parameters.AddWithValue("@prodID", getID);
 
-                                // Execute the query to update the Product table
+
                                 updateD.ExecuteNonQuery();
 
-                                // Clear fields and refresh the product list (Inventory will update automatically due to the trigger)
+
                                 clearFields();
                                 displayAllProducts();
 
@@ -342,17 +342,16 @@ namespace IM101
             productdata iData = new productdata();
             List<productdata> filteredData;
 
-            // Check if the search field contains valid input
             if (string.IsNullOrWhiteSpace(product_search.Text) || product_search.Text == "Search Product")
             {
-                filteredData = iData.AllProductsData(); // Show all products if search is empty or placeholder
+                filteredData = iData.AllProductsData(); 
             }
             else
             {
-                filteredData = iData.SearchProducts(product_search.Text.Trim()); // Filter products based on search term
+                filteredData = iData.SearchProducts(product_search.Text.Trim()); 
             }
 
-            addprod_dataGrid.DataSource = filteredData; // Update the DataGrid with filtered data
+            addprod_dataGrid.DataSource = filteredData; 
         }
 
         private void ResetSearchField()

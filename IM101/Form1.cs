@@ -48,16 +48,13 @@ namespace IM101
                 {
                     connect.Open();
 
-                    // Create the SQL command for calling the stored procedure
                     using (SqlCommand cmd = new SqlCommand("LoginProcedure", connect))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
-                        // Add input parameters
                         cmd.Parameters.AddWithValue("@Username", login_username.Text.Trim());
                         cmd.Parameters.AddWithValue("@Password", login_password.Text.Trim());
 
-                        // Define output parameters
                         SqlParameter userRoleParam = new SqlParameter("@UserRole", SqlDbType.NVarChar, 50)
                         {
                             Direction = ParameterDirection.Output
@@ -70,17 +67,13 @@ namespace IM101
                         };
                         cmd.Parameters.Add(messageParam);
 
-                        // Execute the stored procedure
                         cmd.ExecuteNonQuery();
 
-                        // Retrieve output values
                         string userRole = userRoleParam.Value as string;
                         string message = messageParam.Value.ToString();
 
-                        // Display the message
                         MessageBox.Show(message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                        // Navigate based on the role
                         if (message == "Login successfully!")
                         {
                             username = login_username.Text.Trim();

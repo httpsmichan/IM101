@@ -64,7 +64,6 @@ namespace IM101
                                 Stocks = reader.IsDBNull(reader.GetOrdinal("Stocks")) ? 0 : Convert.ToInt32(reader.GetDecimal(reader.GetOrdinal("Stocks"))),
                                 Unit = reader.IsDBNull(reader.GetOrdinal("Amount")) ? string.Empty : reader.GetString(reader.GetOrdinal("Amount")),
 
-                                // Format the date to show only the date portion
                                 Date = reader.GetDateTime(reader.GetOrdinal("i_Date")).ToString("yyyy-MM-dd")
                             };
 

@@ -49,40 +49,40 @@ namespace IM101
             inventorydata iData = new inventorydata();
             List<inventorydata> filteredData;
 
-            // Check if the search text is empty or contains the placeholder text
+
             if (string.IsNullOrWhiteSpace(viewinv_search.Text) || viewinv_search.Text == "Search Product")
             {
-                filteredData = iData.AllInventoryData(); // Show all inventory items if search is empty or placeholder
+                filteredData = iData.AllInventoryData(); 
             }
             else
             {
-                filteredData = iData.SearchInventory(viewinv_search.Text.Trim()); // Filter inventory based on search term
+                filteredData = iData.SearchInventory(viewinv_search.Text.Trim()); 
             }
 
-            view_inventory.DataSource = filteredData; // Update the DataGrid with filtered data
+            view_inventory.DataSource = filteredData; 
         }
 
         private void viewinv_search_Leave(object sender, EventArgs e)
         {
-            // Restore placeholder text if the search box is empty
+
             if (string.IsNullOrWhiteSpace(viewinv_search.Text))
             {
                 viewinv_search.Text = "Search Product";
-                viewinv_search.ForeColor = Color.Gray; // Set the color to gray for placeholder
+                viewinv_search.ForeColor = Color.Gray; 
             }
             else
             {
-                viewinv_search.ForeColor = Color.Black; // Set text color to black if there's input
+                viewinv_search.ForeColor = Color.Black; 
             }
         }
 
         private void viewinv_search_Enter(object sender, EventArgs e)
         {
-            // Clear the placeholder text when focusing on the search field
+
             if (viewinv_search.Text == "Search Product")
             {
                 viewinv_search.Text = "";
-                viewinv_search.ForeColor = Color.Black; // Set the text color to black while typing
+                viewinv_search.ForeColor = Color.Black; 
             }
         }
 

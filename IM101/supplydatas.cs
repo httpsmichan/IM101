@@ -50,7 +50,7 @@ namespace IM101
                                     UnitCost = reader.IsDBNull(reader.GetOrdinal("UnitCost")) ? 0 : reader.GetDecimal(reader.GetOrdinal("UnitCost")),
                                     TotalCost = reader.IsDBNull(reader.GetOrdinal("TotalCost")) ? 0 : reader.GetDecimal(reader.GetOrdinal("TotalCost")),
 
-                                    // Handle null SupplyDate and format it
+
                                     SupplyDate = reader.IsDBNull(reader.GetOrdinal("SupplyDate"))
                                         ? DateTime.MinValue.ToString("yyyy-MM-dd")
                                         : reader.GetDateTime(reader.GetOrdinal("SupplyDate")).ToString("yyyy-MM-dd"),
