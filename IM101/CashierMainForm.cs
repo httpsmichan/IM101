@@ -33,9 +33,7 @@ namespace IM101
         private void ShowControl(UserControl visibleControl)
         {
             dashboard1.Visible = false;
-            products1.Visible = false;
             customers1.Visible = false;
-            categories1.Visible = false;
             placeorder1.Visible = false;
             orders1.Visible = false;
             viewLogs1.Visible = false;
@@ -77,29 +75,6 @@ namespace IM101
 
         }
 
-        private void categories_btn_Click(object sender, EventArgs e)
-        {
-            ShowControl(categories1);
-
-            categories catForm = categories1 as categories;
-
-            if (catForm != null)
-            {
-                catForm.refreshData();
-            }
-        }
-
-        private void products_btn_Click(object sender, EventArgs e)
-        {
-            ShowControl(products1);
-
-            products productForm = products1 as products;
-
-            if (productForm != null)
-            {
-                productForm.refreshData();
-            }
-        }
 
         private void cart_btn_Click(object sender, EventArgs e)
         {

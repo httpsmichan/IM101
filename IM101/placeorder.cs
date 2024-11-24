@@ -562,7 +562,7 @@ namespace IM101
 
         private void printDocument1_PrintPage(object sender, PrintPageEventArgs e)
         {
-            displayTotalPrice(); 
+            displayTotalPrice();
 
             float y = 0;
             int count = 0;
@@ -588,7 +588,7 @@ namespace IM101
             count++;
             y += tableMargin;
 
-            string[] header = { "ProductID", "ProductName", "Price", "Quantity", "Unit", "Total", "OrderDate" };
+            string[] header = { "CustomerID", "ProductID", "ProductName", "Price", "Quantity", "Unit", "Total", "OrderDate" };
             for (int q = 0; q < header.Length; q++)
             {
                 y = margin + count * bold.GetHeight(e.Graphics) + headerMargin;
@@ -606,6 +606,11 @@ namespace IM101
                 {
                     object cellValue = row.Cells[q].Value;
                     string cell = (cellValue != null) ? cellValue.ToString() : string.Empty;
+
+                    if (grid_placeorder.Columns[q].HeaderText == "OrderDate" && DateTime.TryParse(cell, out DateTime orderDate))
+                    {
+                        cell = orderDate.ToString("MM-dd-yyyy"); 
+                    }
 
                     y = margin + count * font.GetHeight(e.Graphics) + tableMargin;
                     e.Graphics.DrawString(cell, font, Brushes.Black, e.MarginBounds.Left + q * colWidth, y, alignCenter);
@@ -632,7 +637,8 @@ namespace IM101
 
             labelMargin = (int)Math.Min(rSpace, -40);
 
-            string labelText = today.ToString();
+            // Print formatted today date
+            string labelText = today.ToString("MM-dd-yyyy");
             y = e.MarginBounds.Bottom - labelMargin - labelFont.GetHeight(e.Graphics);
             e.Graphics.DrawString(labelText, labelFont, Brushes.Black, e.MarginBounds.Right - e.Graphics.MeasureString("-------------------", labelFont).Width, y);
         }

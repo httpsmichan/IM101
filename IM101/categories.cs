@@ -200,7 +200,6 @@ namespace IM101
                                 clearFields();
                                 displayCategoriesData();
 
-                                MessageBox.Show("Category and associated products removed successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             }
                         }
                         catch (Exception ex)

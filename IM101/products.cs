@@ -144,24 +144,24 @@ namespace IM101
                             connect.Open();
 
 
-                            string updateData = "UPDATE Product SET ProductName = @prodname, Category = @cat, " +
-                                "Price = @price, Status = @status, Date = @date WHERE ProductID = @prodID";
+                            string storedProcedure = "UpdateProductAndCategory";
 
-                            using (SqlCommand updateD = new SqlCommand(updateData, connect))
+                            using (SqlCommand cmd = new SqlCommand(storedProcedure, connect))
                             {
+                                cmd.CommandType = CommandType.StoredProcedure;
 
-                                updateD.Parameters.AddWithValue("@prodName", addprod_name.Text.Trim());
 
+                                cmd.Parameters.AddWithValue("@ProductID", getID);
+                                cmd.Parameters.AddWithValue("@ProductName", addprod_name.Text.Trim());
 
                                 if (addprod_category.SelectedItem != null)
-                                    updateD.Parameters.AddWithValue("@cat", addprod_category.SelectedItem.ToString());
+                                    cmd.Parameters.AddWithValue("@Category", addprod_category.SelectedItem.ToString());
                                 else
-                                    updateD.Parameters.AddWithValue("@cat", DBNull.Value);
-
+                                    cmd.Parameters.AddWithValue("@Category", DBNull.Value);
 
                                 if (decimal.TryParse(addprod_price.Text.Trim(), out decimal price))
                                 {
-                                    updateD.Parameters.AddWithValue("@price", price);
+                                    cmd.Parameters.AddWithValue("@Price", price);
                                 }
                                 else
                                 {
@@ -169,27 +169,22 @@ namespace IM101
                                     return;
                                 }
 
-
                                 if (addprod_status.SelectedItem != null)
-                                    updateD.Parameters.AddWithValue("@status", addprod_status.SelectedItem.ToString());
+                                    cmd.Parameters.AddWithValue("@Status", addprod_status.SelectedItem.ToString());
                                 else
-                                    updateD.Parameters.AddWithValue("@status", DBNull.Value);
+                                    cmd.Parameters.AddWithValue("@Status", DBNull.Value);
 
 
                                 DateTime today = DateTime.Today;
-                                updateD.Parameters.AddWithValue("@date", today);
+                                cmd.Parameters.AddWithValue("@Date", today);
 
 
-                                updateD.Parameters.AddWithValue("@prodID", getID);
-
-
-                                updateD.ExecuteNonQuery();
+                                cmd.ExecuteNonQuery();
 
 
                                 clearFields();
                                 displayAllProducts();
 
-                                MessageBox.Show("Product updated successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             }
                         }
                         catch (Exception ex)
@@ -298,8 +293,7 @@ namespace IM101
             }
             else
             {
-                if (MessageBox.Show("Are you sure you want to Delete Product ID: " +
-                    getID.ToString() + "?", "Confirmation Message", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                if (MessageBox.Show("If you DELETE a product, it will be deleted on the entire database, would you like to proceed? " , "Confirmation Message", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     if (checkConnection())
                     {
@@ -307,17 +301,17 @@ namespace IM101
                         {
                             connect.Open();
 
-                            string deleteData = "DELETE FROM Product WHERE ProductID = @prodID";
-                            using (SqlCommand deleteD = new SqlCommand(deleteData, connect))
+                            using (SqlCommand cmd = new SqlCommand("DeleteProductAndRelatedData", connect))
                             {
-                                deleteD.Parameters.AddWithValue("@prodID", getID);
-                                deleteD.ExecuteNonQuery();
+                                cmd.CommandType = CommandType.StoredProcedure;
+
+                                cmd.Parameters.AddWithValue("@ProductID", getID);
+
+                                cmd.ExecuteNonQuery();
                             }
 
                             clearFields();
                             displayAllProducts();
-
-
                         }
                         catch (Exception ex)
                         {
