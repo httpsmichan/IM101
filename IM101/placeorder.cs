@@ -88,6 +88,7 @@ namespace IM101
         private float totalPrice = 0;
         public void displayTotalPrice()
         {
+
             IDGenerator();
 
             if (checkConnection())
@@ -96,7 +97,7 @@ namespace IM101
                 {
                     connect.Open();
 
-                    string selectData = "SELECT dbo.GetTotalPriceForCustomer(@catID)";
+                    string selectData = "SELECT SUM (Subtotal) FROM Purchase WHERE CustomerID = @catID";
 
                     using (SqlCommand cmd = new SqlCommand(@selectData, connect))
                     {
@@ -123,6 +124,7 @@ namespace IM101
                 }
             }
         }
+
 
         private void grid_placeorder_CellClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -249,103 +251,152 @@ namespace IM101
                 int productID = entry.Key;
                 int totalQuantityChange = entry.Value;
 
-
                 int prevStock = GetCurrentStock(connection, productID);
-                int newStock = prevStock - totalQuantityChange; 
+                int newStock = prevStock - totalQuantityChange;
                 int pstock = RecentStock(connection, productID);
-                int nstock = pstock;
 
+                int relatedInventoryID = GetRelatedInventoryID(connection, productID);
 
-                int relatedInventoryID = 0;
-                using (var getSupplyIDCmd = new SqlCommand(@"
-            SELECT InventoryID 
-            FROM Inventory 
-            WHERE ProductID = @ProductID AND Stocks > 0 
-            ORDER BY InventoryID ASC", connection))
-                {
-                    getSupplyIDCmd.Parameters.AddWithValue("@ProductID", productID);
-                    object result = getSupplyIDCmd.ExecuteScalar();
-                    if (result != null)
-                    {
-                        relatedInventoryID = Convert.ToInt32(result);
-                    }
-                }
-
-
-                string insertLogQuery = @"
-            INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Date, IDs) 
-            VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @date, @ids)";
-
-                using (var cmdLog = new SqlCommand(insertLogQuery, connection))
-                {
-                    string username = Form1.username.Substring(0, 1).ToUpper() + Form1.username.Substring(1).ToLower();
-
-                    cmdLog.Parameters.AddWithValue("@actionType", "Order Purchase");
-                    cmdLog.Parameters.AddWithValue("@prodID", productID);
-                    cmdLog.Parameters.AddWithValue("@quantityChange", -totalQuantityChange);
-                    cmdLog.Parameters.AddWithValue("@prevStock", prevStock);
-                    cmdLog.Parameters.AddWithValue("@newStock", newStock);
-                    cmdLog.Parameters.AddWithValue("@staff", "@" + username);
-                    cmdLog.Parameters.AddWithValue("@date", today);
-                    cmdLog.Parameters.AddWithValue("@ids", "InventoryID: " + relatedInventoryID); 
-                    cmdLog.ExecuteNonQuery();
-                }
-
+                InsertLog(connection, "Order Purchase", productID, -totalQuantityChange, prevStock, newStock, today, relatedInventoryID);
 
                 if (newStock == 0)
                 {
-
-                    using (var cmdStockCapacityLog = new SqlCommand(insertLogQuery, connection))
-                    {
-                        string username = Form1.username.Substring(0, 1).ToUpper() + Form1.username.Substring(1).ToLower();
-
-                        cmdStockCapacityLog.Parameters.AddWithValue("@actionType", "Stock at Capacity");
-                        cmdStockCapacityLog.Parameters.AddWithValue("@prodID", productID);
-                        cmdStockCapacityLog.Parameters.AddWithValue("@quantityChange", 0); 
-                        cmdStockCapacityLog.Parameters.AddWithValue("@prevStock", pstock); 
-                        cmdStockCapacityLog.Parameters.AddWithValue("@newStock", nstock); 
-                        cmdStockCapacityLog.Parameters.AddWithValue("@staff", "@" + username);
-                        cmdStockCapacityLog.Parameters.AddWithValue("@date", today);
-                        cmdStockCapacityLog.Parameters.AddWithValue("@ids", "InventoryID: " + relatedInventoryID); 
-                        cmdStockCapacityLog.ExecuteNonQuery();
-                    }
-
-                    string updateInventoryQuery = @"
-                UPDATE Inventory 
-                SET Stocks = 0 
-                WHERE InventoryID = @InventoryID";
-
-                    using (var cmdUpdateInventory = new SqlCommand(updateInventoryQuery, connection))
-                    {
-                        cmdUpdateInventory.Parameters.AddWithValue("@InventoryID", relatedInventoryID);
-                        cmdUpdateInventory.ExecuteNonQuery();
-                    }
-
-
-                    string deleteInventoryQuery = @"
-                DELETE FROM Inventory
-                WHERE InventoryID = @InventoryID";
-
-                    using (var cmdDeleteInventory = new SqlCommand(deleteInventoryQuery, connection))
-                    {
-                        cmdDeleteInventory.Parameters.AddWithValue("@InventoryID", relatedInventoryID);
-                        cmdDeleteInventory.ExecuteNonQuery();
-                    }
+                    HandleStockAtCapacity(connection, productID, pstock, today, relatedInventoryID);
                 }
-
 
                 UpdateInventory(connection, productID, totalQuantityChange);
             }
 
-
-            using (var cmdDelete = new SqlCommand("DELETE FROM Purchase WHERE CustomerID = @cID", connection))
-            {
-                cmdDelete.Parameters.AddWithValue("@cID", billNo);
-                cmdDelete.ExecuteNonQuery();
-            }
-
+            DeletePurchaseByCustomerID(connection, billNo);
 
             connection.Close();
+        }
+
+        private void InsertLog(SqlConnection connection, string actionType, int productID, int quantityChange, int prevStock, int newStock, DateTime date, int relatedInventoryID)
+        {
+            if (connection.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
+
+            int pStock = GetCurrentStock(connection, productID); 
+            int nStock = pStock; 
+
+            string username = Form1.username.Substring(0, 1).ToUpper() + Form1.username.Substring(1).ToLower();
+
+            string insertLogQuery = @"
+        INSERT INTO Logs (ActionType, ProductID, QuantityChange, PrevStock, NewStock, Staff, Date, IDs) 
+        VALUES (@actionType, @prodID, @quantityChange, @prevStock, @newStock, @staff, @date, @ids)";
+
+            using (var cmdLog = new SqlCommand(insertLogQuery, connection))
+            {
+                cmdLog.Parameters.AddWithValue("@actionType", actionType);
+                cmdLog.Parameters.AddWithValue("@prodID", productID);
+                cmdLog.Parameters.AddWithValue("@quantityChange", quantityChange);
+                cmdLog.Parameters.AddWithValue("@prevStock", prevStock);
+                cmdLog.Parameters.AddWithValue("@newStock", newStock); 
+                cmdLog.Parameters.AddWithValue("@staff", "@" + username);  
+                cmdLog.Parameters.AddWithValue("@date", date);
+                cmdLog.Parameters.AddWithValue("@ids", "InventoryID: " + relatedInventoryID);
+
+                cmdLog.ExecuteNonQuery();
+            }
+        }
+
+
+        private void HandleStockAtCapacity(SqlConnection connection, int productID, int pstock, DateTime today, int relatedInventoryID)
+        {
+            InsertLog(connection, "Stock at Capacity", productID, 0, pstock, pstock, today, relatedInventoryID);
+
+            string updateInventoryQuery = @"
+    UPDATE Inventory 
+    SET Stocks = 0 
+    WHERE InventoryID = @InventoryID";
+
+            using (var cmdUpdateInventory = new SqlCommand(updateInventoryQuery, connection))
+            {
+                cmdUpdateInventory.Parameters.AddWithValue("@InventoryID", relatedInventoryID);
+                cmdUpdateInventory.ExecuteNonQuery();
+            }
+
+            string checkStockQuery = @"
+    SELECT Stocks FROM Inventory 
+    WHERE InventoryID = @InventoryID";
+
+            int currentStock = 0;
+            using (var cmdCheckStock = new SqlCommand(checkStockQuery, connection))
+            {
+                cmdCheckStock.Parameters.AddWithValue("@InventoryID", relatedInventoryID);
+                var result = cmdCheckStock.ExecuteScalar();
+                if (result != DBNull.Value)
+                {
+                    currentStock = Convert.ToInt32(result);
+                }
+            }
+
+            if (currentStock == 0)
+            {
+                string deleteInventoryQuery = @"
+        DELETE FROM Inventory
+        WHERE InventoryID = @InventoryID AND Stocks = 0"; 
+
+                using (var cmdDeleteInventory = new SqlCommand(deleteInventoryQuery, connection))
+                {
+                    cmdDeleteInventory.Parameters.AddWithValue("@InventoryID", relatedInventoryID);
+                    cmdDeleteInventory.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private int DeleteAllPurchases(SqlConnection connection)
+        {
+            int rowsAffected = 0;
+
+            try
+            {
+                if (connection.State != ConnectionState.Open)
+                {
+                    connection.Open();
+                }
+
+                string deleteQuery = "DELETE FROM Purchase";
+
+                using (var cmdDelete = new SqlCommand(deleteQuery, connection))
+                {
+                    rowsAffected = cmdDelete.ExecuteNonQuery();
+                }
+
+                return rowsAffected;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error deleting all purchases: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return 0; 
+            }
+        }
+
+
+        private int GetRelatedInventoryID(SqlConnection connection, int productID)
+        {
+            using (var getSupplyIDCmd = new SqlCommand(@"
+        SELECT InventoryID 
+        FROM Inventory 
+        WHERE ProductID = @ProductID AND Stocks > 0 
+        ORDER BY InventoryID ASC", connection))
+            {
+                getSupplyIDCmd.Parameters.AddWithValue("@ProductID", productID);
+                object result = getSupplyIDCmd.ExecuteScalar();
+                return result != null ? Convert.ToInt32(result) : 0;
+            }
+        }
+
+        private void DeletePurchaseByCustomerID(SqlConnection connection, int customerID)
+        {
+            using (var cmdDelete = new SqlCommand("DELETE FROM Purchase WHERE CustomerID = @cID", connection))
+            {
+                cmdDelete.Parameters.AddWithValue("@cID", customerID);
+                cmdDelete.ExecuteNonQuery();
+            }
         }
 
         private int GetCurrentStock(SqlConnection connection, int productID)
@@ -374,11 +425,20 @@ namespace IM101
 
         private void UpdateInventory(SqlConnection connection, int productID, int totalQuantityChange)
         {
-            string inventoryQuery = "SELECT InventoryID, Stocks FROM Inventory WHERE ProductID = @prodID ORDER BY InventoryID ASC";
+            if (connection.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
+
+            string inventoryQuery = @"
+    SELECT InventoryID, Stocks FROM Inventory
+    WHERE ProductID = @prodID AND Stocks > 0
+    ORDER BY InventoryID ASC";  
 
             using (var cmdFetchInventory = new SqlCommand(inventoryQuery, connection))
             {
                 cmdFetchInventory.Parameters.AddWithValue("@prodID", productID);
+
                 using (var inventoryReader = cmdFetchInventory.ExecuteReader())
                 {
                     int remainingQuantity = totalQuantityChange;
@@ -398,7 +458,7 @@ namespace IM101
                                 cmdUpdate.Parameters.AddWithValue("@inventoryID", inventoryID);
                                 cmdUpdate.ExecuteNonQuery();
                             }
-                            remainingQuantity = 0;
+                            remainingQuantity = 0;  
                         }
                         else
                         {
@@ -408,7 +468,31 @@ namespace IM101
                                 cmdUpdate.Parameters.AddWithValue("@inventoryID", inventoryID);
                                 cmdUpdate.ExecuteNonQuery();
                             }
-                            remainingQuantity -= currentStock;
+                            remainingQuantity -= currentStock;  
+                        }
+
+                        string checkStockQuery = "SELECT Stocks FROM Inventory WHERE InventoryID = @inventoryID";
+                        int updatedStock = 0;
+                        using (var cmdCheckStock = new SqlCommand(checkStockQuery, connection))
+                        {
+                            cmdCheckStock.Parameters.AddWithValue("@inventoryID", inventoryID);
+                            var result = cmdCheckStock.ExecuteScalar();
+                            if (result != DBNull.Value)
+                            {
+                                updatedStock = Convert.ToInt32(result);
+                            }
+                        }
+
+                        if (updatedStock == 0)
+                        {
+                            InsertLog(connection, "Stock at Capacity", productID, 0, currentStock, 0, DateTime.Now, inventoryID);
+
+                            string deleteQuery = "DELETE FROM Inventory WHERE InventoryID = @inventoryID";
+                            using (var cmdDelete = new SqlCommand(deleteQuery, connection))
+                            {
+                                cmdDelete.Parameters.AddWithValue("@inventoryID", inventoryID);
+                                cmdDelete.ExecuteNonQuery();
+                            }
                         }
                     }
 
@@ -419,6 +503,7 @@ namespace IM101
 
                     if (insufficientStock)
                     {
+                        MessageBox.Show("Not enough stock available to fulfill the order.", "Stock Insufficient", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
                 }
@@ -453,16 +538,12 @@ namespace IM101
                     {
                         connect.Open();
 
-                        string deletePurchase = "DELETE FROM Purchase WHERE CustomerID = @cID";
-                        using (SqlCommand cmdDelete = new SqlCommand(deletePurchase, connect))
-                        {
-                            cmdDelete.Parameters.AddWithValue("@cID", idGen);
-                            cmdDelete.ExecuteNonQuery();
-                        }
+                        int rowsDeleted = DeleteAllPurchases(connect); 
+
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Connection failed: " + ex, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Connection failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     finally
                     {
@@ -481,7 +562,7 @@ namespace IM101
 
         private void printDocument1_PrintPage(object sender, PrintPageEventArgs e)
         {
-            displayTotalPrice();
+            displayTotalPrice(); 
 
             float y = 0;
             int count = 0;
@@ -501,23 +582,22 @@ namespace IM101
             alignCenter.LineAlignment = StringAlignment.Center;
 
             string headerText = "Funtilon Hardware and Construction Supplies\r\n";
-            y = (margin + count * headerFont.GetHeight(e.Graphics) + headerMargin);
+            y = margin + count * headerFont.GetHeight(e.Graphics) + headerMargin;
             e.Graphics.DrawString(headerText, headerFont, Brushes.Black, e.MarginBounds.Left + (grid_placeorder.Columns.Count / 2) * colWidth, y, alignCenter);
 
             count++;
             y += tableMargin;
 
             string[] header = { "ProductID", "ProductName", "Price", "Quantity", "Unit", "Total", "OrderDate" };
-
             for (int q = 0; q < header.Length; q++)
             {
                 y = margin + count * bold.GetHeight(e.Graphics) + headerMargin;
                 e.Graphics.DrawString(header[q], bold, Brushes.Black, e.MarginBounds.Left + q * colWidth, y, alignCenter);
             }
+
             count++;
 
             float rSpace = e.MarginBounds.Bottom - y;
-
             while (rowIndex < grid_placeorder.Rows.Count)
             {
                 DataGridViewRow row = grid_placeorder.Rows[rowIndex];
@@ -530,6 +610,7 @@ namespace IM101
                     y = margin + count * font.GetHeight(e.Graphics) + tableMargin;
                     e.Graphics.DrawString(cell, font, Brushes.Black, e.MarginBounds.Left + q * colWidth, y, alignCenter);
                 }
+
                 count++;
                 rowIndex++;
 
@@ -539,25 +620,21 @@ namespace IM101
                     return;
                 }
             }
+
             int labelMargin = (int)Math.Min(rSpace, 200);
 
             DateTime today = DateTime.Today;
-
-
             float labelX = e.MarginBounds.Right - e.Graphics.MeasureString("--------------------------", labelFont).Width;
 
             y = e.MarginBounds.Bottom - labelMargin - labelFont.GetHeight(e.Graphics);
-
-            e.Graphics.DrawString("Total Price: \t₱" + totalPrice + "\nAmount: \t₱" + order_Cashamount.Text.Trim()
+            e.Graphics.DrawString("Total Price: \t₱" + totalPrice.ToString("0.00") + "\nAmount: \t₱" + order_Cashamount.Text.Trim()
                 + "\n\t\t-------------------\nChange: \t₱" + order_Change.Text.Trim(), labelFont, Brushes.Black, labelX, y);
 
             labelMargin = (int)Math.Min(rSpace, -40);
 
             string labelText = today.ToString();
             y = e.MarginBounds.Bottom - labelMargin - labelFont.GetHeight(e.Graphics);
-            e.Graphics.DrawString(labelText, labelFont, Brushes.Black, e.MarginBounds.Right -
-                e.Graphics.MeasureString("-------------------", labelFont).Width, y);
-
+            e.Graphics.DrawString(labelText, labelFont, Brushes.Black, e.MarginBounds.Right - e.Graphics.MeasureString("-------------------", labelFont).Width, y);
         }
 
         private void grid_placeorder_CellContentClick(object sender, DataGridViewCellEventArgs e)

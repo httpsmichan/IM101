@@ -61,7 +61,7 @@ namespace IM101
                                 ProductID = reader.GetInt32(reader.GetOrdinal("ProductID")),
                                 ProductName = reader.GetString(reader.GetOrdinal("ProductName")),
                                 Price = reader.GetDecimal(reader.GetOrdinal("i_Price")),
-                                Stocks = reader.IsDBNull(reader.GetOrdinal("Stocks")) ? 0 : Convert.ToInt32(reader.GetDecimal(reader.GetOrdinal("Stocks"))),
+                                Stocks = reader.GetInt32(reader.GetOrdinal("Stocks")),
                                 Unit = reader.IsDBNull(reader.GetOrdinal("Amount")) ? string.Empty : reader.GetString(reader.GetOrdinal("Amount")),
 
                                 Date = reader.GetDateTime(reader.GetOrdinal("i_Date")).ToString("yyyy-MM-dd")
@@ -117,7 +117,7 @@ namespace IM101
                                 ProductID = reader.GetInt32(reader.GetOrdinal("ProductID")),
                                 ProductName = reader.GetString(reader.GetOrdinal("ProductName")),
                                 Price = reader.IsDBNull(reader.GetOrdinal("i_Price")) ? 0m : reader.GetDecimal(reader.GetOrdinal("i_Price")),
-                                Stocks = reader.IsDBNull(reader.GetOrdinal("Stocks")) ? 0 : Convert.ToInt32(reader.GetDecimal(reader.GetOrdinal("Stocks"))), // Keep integer conversion
+                                Stocks = reader.GetInt32(reader.GetOrdinal("Stocks")),
                                 Unit = reader.IsDBNull(reader.GetOrdinal("Amount")) ? "0" : reader.GetString(reader.GetOrdinal("Amount")),
                                 Date = reader.IsDBNull(reader.GetOrdinal("i_Date"))
                                         ? DateTime.MinValue.ToString("yyyy-MM-dd")

@@ -113,12 +113,10 @@ namespace IM101
 
             try
             {
-
                 if (connect.State != ConnectionState.Open)
                 {
                     connect.Open();
                 }
-
 
                 using (SqlCommand checkCommand = new SqlCommand(checkProductQuery, connect))
                 {
@@ -131,7 +129,6 @@ namespace IM101
                         return;
                     }
                 }
-
 
                 string getProductDetailsQuery = "SELECT ProductName, UnitCost FROM Supply WHERE ProductID = @ProductID";
                 string productName = string.Empty;
@@ -150,9 +147,7 @@ namespace IM101
                     }
                 }
 
-
                 string status = supply_status.SelectedItem == null ? "Order Placed" : supply_status.SelectedItem.ToString();
-
 
                 string insertQuery = "INSERT INTO Supply (ProductID, ProductName, QtySupplied, UnitCost, TotalCost, SupplierID, Status, SupplyDate) " +
                                      "VALUES (@ProductID, @ProductName, @Quantity, @UnitCost, @TotalCost, @SupplierID, @Status, @Date)";
@@ -168,20 +163,18 @@ namespace IM101
                     command.Parameters.AddWithValue("@Status", status);
                     command.Parameters.AddWithValue("@Date", DateTime.Today);
 
-                    command.ExecuteNonQuery(); 
+                    command.ExecuteNonQuery();
                 }
-
 
                 if (status == "Received")
                 {
-
                     InsertLogEntry(connect, supply_prodID.Text, supply_qtys.Text, "Supply Received");
 
+                    // Insert new inventory row, even if inventory already exists
                     InsertInventory(connect, supply_prodID.Text, productName, unitCost, supply_qtys.Text);
-
                 }
 
-                clearFields(); 
+                clearFields();
             }
             catch (Exception ex)
             {
@@ -189,15 +182,15 @@ namespace IM101
             }
             finally
             {
-
                 if (connect.State == ConnectionState.Open)
                 {
                     connect.Close();
                 }
 
-                DisplayAllSupplies(); 
+                DisplayAllSupplies();
             }
         }
+
 
         private void InsertInventory(SqlConnection connection, string productID, string productName, double unitCost, string quantitySupplied)
         {
@@ -208,61 +201,28 @@ namespace IM101
                     connection.Open();
                 }
 
+                // Insert a new inventory row every time, regardless of whether the product exists in Inventory.
+                string insertInventoryQuery = @"
+            INSERT INTO Inventory (ProductID, ProductName, Price, Stocks, Amount, Date)
+            VALUES (@ProductID, @ProductName, @Price, @Stocks, @Amount, @Date)";
 
-                string checkInventoryQuery = "SELECT COUNT(1) FROM Inventory WHERE ProductID = @ProductID";
-
-                int inventoryExists;
-                using (SqlCommand checkCommand = new SqlCommand(checkInventoryQuery, connection))
+                using (SqlCommand insertCommand = new SqlCommand(insertInventoryQuery, connection))
                 {
-                    checkCommand.Parameters.AddWithValue("@ProductID", productID);
-                    inventoryExists = (int)checkCommand.ExecuteScalar();
+                    insertCommand.Parameters.AddWithValue("@ProductID", productID);
+                    insertCommand.Parameters.AddWithValue("@ProductName", productName);
+                    insertCommand.Parameters.AddWithValue("@Price", unitCost);
+                    insertCommand.Parameters.AddWithValue("@Stocks", Convert.ToInt32(quantitySupplied));  // Converts the supplied quantity to integer
+                    insertCommand.Parameters.AddWithValue("@Amount", "pcs");
+                    insertCommand.Parameters.AddWithValue("@Date", DateTime.Today);
+
+                    insertCommand.ExecuteNonQuery();
                 }
 
-                if (inventoryExists > 0)
-                {
-
-                    string updateInventoryQuery = @"
-                UPDATE Inventory
-                SET Stocks = Stocks + @QuantitySupplied, Price = @Price, Date = @Date
-                WHERE ProductID = @ProductID";
-
-                    using (SqlCommand updateCommand = new SqlCommand(updateInventoryQuery, connection))
-                    {
-                        updateCommand.Parameters.AddWithValue("@ProductID", productID);
-                        updateCommand.Parameters.AddWithValue("@QuantitySupplied", Convert.ToInt32(quantitySupplied));
-                        updateCommand.Parameters.AddWithValue("@Price", unitCost);
-                        updateCommand.Parameters.AddWithValue("@Date", DateTime.Today);
-
-                        updateCommand.ExecuteNonQuery();
-                    }
-
-                    Console.WriteLine("Inventory updated successfully!");
-                }
-                else
-                {
-                    string insertInventoryQuery = @"
-                INSERT INTO Inventory (ProductID, ProductName, Price, Stocks, Amount, Date)
-                VALUES (@ProductID, @ProductName, @Price, @Stocks, @Amount, @Date)";
-
-                    using (SqlCommand insertCommand = new SqlCommand(insertInventoryQuery, connection))
-                    {
-                        insertCommand.Parameters.AddWithValue("@ProductID", productID);
-                        insertCommand.Parameters.AddWithValue("@ProductName", productName);
-                        insertCommand.Parameters.AddWithValue("@Price", unitCost);
-                        insertCommand.Parameters.AddWithValue("@Stocks", Convert.ToInt32(quantitySupplied));
-                        insertCommand.Parameters.AddWithValue("@Amount", "pcs");
-                        insertCommand.Parameters.AddWithValue("@Date", DateTime.Today);
-
-                        insertCommand.ExecuteNonQuery();
-                    }
-
-                    Console.WriteLine("Inventory inserted successfully!");
-                }
-
+                Console.WriteLine("Inventory inserted successfully!");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error inserting/updating inventory: " + ex.Message);
+                MessageBox.Show("Error inserting inventory: " + ex.Message);
             }
         }
 

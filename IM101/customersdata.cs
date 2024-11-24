@@ -19,7 +19,7 @@ namespace IM101
         public string TotalPrice { get; set; }
         public string Amount { get; set; }
         public string Change { get; set; }
-        public DateTime Date { get; set; }
+        public string Date { get; set; }
 
         public List<customersdata> allCustomers()
         {
@@ -31,7 +31,7 @@ namespace IM101
                 {
                     connect.Open();
 
-                    string selectData = @"SELECT * FROM Payment";
+                    string selectData = @"SELECT * FROM Customers";
 
                     using (SqlCommand cmd = new SqlCommand(selectData, connect))
                     {
@@ -46,8 +46,10 @@ namespace IM101
                             cdata.Amount = reader["Amount"].ToString();
                             cdata.Change = reader["Change"].ToString();
 
-                            DateTime orderDate = Convert.ToDateTime(reader["OrderDate"]);
-                            cdata.Date = orderDate;
+                            DateTime orderDate = Convert.ToDateTime(reader["Date"]);
+                            cdata.Date = orderDate.Date.ToString("yyyy-MM-dd"); 
+
+
 
                             listData.Add(cdata);
                         }
@@ -79,8 +81,8 @@ namespace IM101
                     connect.Open();
 
                     string selectData = @"
-                SELECT * FROM Payment
-                WHERE CAST(OrderDate AS DATE) = CAST(GETDATE() AS DATE)";  
+                SELECT * FROM Customers
+                WHERE CAST(Date AS DATE) = CAST(GETDATE() AS DATE)";  
 
                     using (SqlCommand cmd = new SqlCommand(selectData, connect))
                     {
@@ -95,8 +97,9 @@ namespace IM101
                             cdata.Amount = reader["Amount"].ToString();
                             cdata.Change = reader["Change"].ToString();
 
-                            DateTime orderDate = Convert.ToDateTime(reader["OrderDate"]);
-                            cdata.Date = orderDate;
+                            DateTime orderDate = Convert.ToDateTime(reader["Date"]);
+                            cdata.Date = orderDate.Date.ToString("yyyy-MM-dd"); 
+
 
                             listData.Add(cdata);
                         }
@@ -126,8 +129,8 @@ namespace IM101
                     connect.Open();
 
                 string searchQuery = @"
-    SELECT b.CustomerID, b.BillNo, p.TotalPrice, p.Amount, p.Change, p.OrderDate, p.BillNo
-    FROM Payment p
+    SELECT b.CustomerID, b.BillNo, p.TotalPrice, p.Amount, p.Change, p.Date, p.BillNo
+    FROM Customers p
     JOIN Billing b ON p.BillNo = b.BillNo
     WHERE b.CustomerID LIKE @searchTerm OR b.BillNo LIKE @searchTerm";
 
@@ -146,8 +149,9 @@ namespace IM101
                             TotalPrice = reader["TotalPrice"].ToString(),
                             Amount = reader["Amount"].ToString(),
                             Change = reader["Change"].ToString(),
-                            Date = Convert.ToDateTime(reader["OrderDate"])
-                        };
+                            Date = Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd")
+
+                    };
 
                         listData.Add(cdata);
                     }

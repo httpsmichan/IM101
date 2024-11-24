@@ -127,8 +127,15 @@ namespace IM101
             }
             else
             {
-                if (MessageBox.Show("Are you sure you want to Update Product ID: " +
-                    getID.ToString() + "?", "Confirmation Message", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                string amount = inventory_am.Text.Trim();
+                if (string.IsNullOrEmpty(amount))
+                {
+                    MessageBox.Show("Please enter a valid amount.", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return; 
+                }
+
+                if (MessageBox.Show("Are you sure you want to Update Product ID: " + getID.ToString() + "?",
+                                    "Confirmation Message", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     if (checkConnection())
                     {
@@ -136,20 +143,20 @@ namespace IM101
                         {
                             connect.Open();
 
-                            string updateData = "UPDATE Inventory SET Amount = @am WHERE ProductID = @prodID";
+                            string storedProcedure = "UpdateProductInventory";
 
-                            using (SqlCommand updateD = new SqlCommand(updateData, connect))
+                            using (SqlCommand cmd = new SqlCommand(storedProcedure, connect))
                             {
-                                updateD.Parameters.AddWithValue("@am", inventory_am.Text.Trim());
+                                cmd.CommandType = CommandType.StoredProcedure;
 
-                                updateD.Parameters.AddWithValue("@prodID", getID);
+                                cmd.Parameters.AddWithValue("@ProductID", getID); 
+                                cmd.Parameters.AddWithValue("@Amount", amount);
 
-                                updateD.ExecuteNonQuery();
+                                cmd.ExecuteNonQuery();
 
                                 clearFields();
                                 DisplayAllProducts();
-
-                                MessageBox.Show("Product updated successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                
                             }
                         }
                         catch (Exception ex)

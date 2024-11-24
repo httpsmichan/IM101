@@ -132,23 +132,29 @@ namespace IM101
                     {
                         try
                         {
-                            connect.Open();
-                            string updateData = "UPDATE Category SET category = @cat, date = @date WHERE CategoryID = @id";
-                            using (SqlCommand updateCmd = new SqlCommand(updateData, connect))
-                            {
-                                DateTime today = DateTime.Today;
-                                updateCmd.Parameters.AddWithValue("@cat", category_name.Text.Trim());
-                                updateCmd.Parameters.AddWithValue("@date", today);
-                                updateCmd.Parameters.AddWithValue("@id", getID);
 
-                                updateCmd.ExecuteNonQuery();
+                            connect.Open();
+
+
+                            string storedProcedure = "UpdateCategory";
+
+                            using (SqlCommand cmd = new SqlCommand(storedProcedure, connect))
+                            {
+                                cmd.CommandType = CommandType.StoredProcedure;
+
+                                cmd.Parameters.AddWithValue("@CategoryID", getID); 
+                                cmd.Parameters.AddWithValue("@CategoryName", category_name.Text.Trim());
+
+                                cmd.ExecuteNonQuery();
+
                                 clearFields();
                                 displayCategoriesData();
+
                             }
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show("Update failed: " + ex, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show("Update failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                         finally
                         {
@@ -180,33 +186,26 @@ namespace IM101
                         {
                             connect.Open();
 
-                            string deleteSupplies = "DELETE FROM Supply WHERE ProductID IN (SELECT ProductID FROM Product WHERE Category = @cat)";
-                            using (SqlCommand deleteSuppliesCmd = new SqlCommand(deleteSupplies, connect))
-                            {
-                                deleteSuppliesCmd.Parameters.AddWithValue("@cat", category_name.Text.Trim());
-                                deleteSuppliesCmd.ExecuteNonQuery();
-                            }
+                            string storedProcedure = "RemoveCategoryAndProducts";
 
-                            string removeProducts = "DELETE FROM Product WHERE Category = @cat";
-                            using (SqlCommand deleteProductsCmd = new SqlCommand(removeProducts, connect))
+                            using (SqlCommand cmd = new SqlCommand(storedProcedure, connect))
                             {
-                                deleteProductsCmd.Parameters.AddWithValue("@cat", category_name.Text.Trim());
-                                deleteProductsCmd.ExecuteNonQuery();
-                            }
+                                cmd.CommandType = CommandType.StoredProcedure;
 
-                            string removeCategory = "DELETE FROM Category WHERE categoryid = @id";
-                            using (SqlCommand deleteCategoryCmd = new SqlCommand(removeCategory, connect))
-                            {
-                                deleteCategoryCmd.Parameters.AddWithValue("@id", getID);
-                                deleteCategoryCmd.ExecuteNonQuery();
-                            }
+                                cmd.Parameters.AddWithValue("@CategoryID", getID);  
+                                cmd.Parameters.AddWithValue("@CategoryName", category_name.Text.Trim()); 
 
-                            clearFields();
-                            displayCategoriesData();
+                                cmd.ExecuteNonQuery();
+
+                                clearFields();
+                                displayCategoriesData();
+
+                                MessageBox.Show("Category and associated products removed successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show("Update failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show("Removal failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                         finally
                         {

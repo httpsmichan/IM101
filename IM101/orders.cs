@@ -146,20 +146,9 @@ namespace IM101
             order_Remstock.Text = "";
             enterprodID.Text = "";
             order_prodName.Text = "";
-            order_Totalprice.Text = "";
             enterQty.Text = "";
-            dataGridView1.DataSource = null;
-            totalPrice = 0;
         }
 
-        public void clearFields1()
-        {
-            order_Remstock.Text = "";
-            enterprodID.Text = "";
-            order_prodName.Text = "";
-            enterQty.Text = "";
-            order_price.Text = "";
-        }
 
         private void AddOrder()
         {
@@ -280,42 +269,21 @@ namespace IM101
                     {
                         connect.Open();
 
-                        string fetchDataQuery = "SELECT ProductID, Quantity FROM Purchase WHERE PurchaseID = @pID";
-                        string productID = string.Empty;
-                        int qtyToRemove = 0;
-
-                        using (SqlCommand fetchDataCmd = new SqlCommand(fetchDataQuery, connect))
+                        using (SqlCommand cmd = new SqlCommand("RemoveOrder", connect))
                         {
-                            fetchDataCmd.Parameters.AddWithValue("@pID", purchaseID);
-                            using (SqlDataReader reader = fetchDataCmd.ExecuteReader())
-                            {
-                                if (reader.Read())
-                                {
-                                    productID = reader["ProductID"].ToString();
-                                    qtyToRemove = Convert.ToInt32(reader["Quantity"]);
-                                }
-                                else
-                                {
-                                    MessageBox.Show("No data found for the specified Purchase ID.", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                    return;
-                                }
-                            }
+                            cmd.CommandType = CommandType.StoredProcedure;
+
+                            cmd.Parameters.AddWithValue("@purchaseID", purchaseID);
+
+                            cmd.ExecuteNonQuery();
                         }
-
-                        string deleteData = "DELETE FROM Purchase WHERE PurchaseID = @pID";
-
-                        using (SqlCommand deleteCmd = new SqlCommand(deleteData, connect))
-                        {
-                            deleteCmd.Parameters.AddWithValue("@pID", purchaseID);
-                            deleteCmd.ExecuteNonQuery();
-                        }
-
+                        order_Totalprice.Text = " ";
                         displayOrders();
                         displayTotalPrice();
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Connection failed: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Error: " + ex.Message, "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     finally
                     {
