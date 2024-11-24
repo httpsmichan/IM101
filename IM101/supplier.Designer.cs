@@ -161,9 +161,9 @@
             this.label1.ForeColor = System.Drawing.Color.Black;
             this.label1.Location = new System.Drawing.Point(3, 22);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(96, 18);
+            this.label1.Size = new System.Drawing.Size(69, 18);
             this.label1.TabIndex = 60;
-            this.label1.Text = "Alll Supplier";
+            this.label1.Text = "Supplier";
             // 
             // supplier_dataGrid
             // 

@@ -365,9 +365,9 @@
             this.label8.ForeColor = System.Drawing.Color.Black;
             this.label8.Location = new System.Drawing.Point(3, 22);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(170, 18);
+            this.label8.Size = new System.Drawing.Size(147, 18);
             this.label8.TabIndex = 28;
-            this.label8.Text = "All Available Products";
+            this.label8.Text = "Available Products";
             // 
             // order_Gridview1
             // 

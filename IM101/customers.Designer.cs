@@ -57,9 +57,9 @@
             this.label1.ForeColor = System.Drawing.Color.Black;
             this.label1.Location = new System.Drawing.Point(3, 17);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(114, 18);
+            this.label1.Size = new System.Drawing.Size(91, 18);
             this.label1.TabIndex = 54;
-            this.label1.Text = "All Customers";
+            this.label1.Text = "Customers";
             // 
             // dataGridView_Customers
             // 

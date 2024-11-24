@@ -106,9 +106,9 @@
             this.label1.ForeColor = System.Drawing.Color.Black;
             this.label1.Location = new System.Drawing.Point(3, 22);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(113, 18);
+            this.label1.Size = new System.Drawing.Size(90, 18);
             this.label1.TabIndex = 47;
-            this.label1.Text = "All Categories";
+            this.label1.Text = "Categories";
             // 
             // category_search
             // 
