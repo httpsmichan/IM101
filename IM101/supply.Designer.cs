@@ -174,6 +174,7 @@
             this.supply_prodID.Name = "supply_prodID";
             this.supply_prodID.Size = new System.Drawing.Size(154, 20);
             this.supply_prodID.TabIndex = 49;
+            this.supply_prodID.KeyDown += new System.Windows.Forms.KeyEventHandler(this.supply_prodID_KeyDown);
             // 
             // label3
             // 

@@ -676,8 +676,11 @@ namespace IM101
             }
         }
 
+
         private void placeorder_Load(object sender, EventArgs e)
         {
+            comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
+
             panel_cash.Visible = false;
             panel_Gcash.Visible = false;
             panel_bank.Visible = false;

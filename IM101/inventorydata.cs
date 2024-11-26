@@ -95,13 +95,16 @@ namespace IM101
                     connect.Open();
 
                 string searchQuery = @"
-            SELECT i.InventoryID, i.ProductID, p.ProductName, 
-                   i.Price AS i_Price, i.Stocks, i.Amount, i.Date AS i_Date 
-            FROM Inventory i
-            INNER JOIN Product p ON i.ProductID = p.ProductID
-            WHERE p.ProductName LIKE @searchTerm OR i.ProductID LIKE @searchTerm";
-
-                using (SqlCommand cmd = new SqlCommand(searchQuery, connect))
+        SELECT i.InventoryID, i.ProductID, p.ProductName, 
+               i.Price AS i_Price, i.Stocks, i.Amount, i.Date AS i_Date 
+        FROM Inventory i
+        INNER JOIN Product p ON i.ProductID = p.ProductID
+        WHERE CAST(i.InventoryID AS VARCHAR) LIKE @searchTerm 
+              OR CAST(i.ProductID AS VARCHAR) LIKE @searchTerm 
+              OR p.ProductName LIKE @searchTerm
+              OR CONVERT(VARCHAR, i.Date, 23) LIKE @searchTerm";
+        
+        using (SqlCommand cmd = new SqlCommand(searchQuery, connect))
                 {
                     cmd.Parameters.AddWithValue("@searchTerm", "%" + searchTerm + "%");
 
@@ -120,10 +123,9 @@ namespace IM101
                                 Stocks = reader.GetInt32(reader.GetOrdinal("Stocks")),
                                 Unit = reader.IsDBNull(reader.GetOrdinal("Amount")) ? "0" : reader.GetString(reader.GetOrdinal("Amount")),
                                 Date = reader.IsDBNull(reader.GetOrdinal("i_Date"))
-                                        ? DateTime.MinValue.ToString("yyyy-MM-dd")
-                                        : reader.GetDateTime(reader.GetOrdinal("i_Date")).ToString("yyyy-MM-dd")
-
-                        };
+                                       ? DateTime.MinValue.ToString("yyyy-MM-dd")
+                                       : reader.GetDateTime(reader.GetOrdinal("i_Date")).ToString("yyyy-MM-dd")
+                            };
 
                             listData.Add(data);
                         }

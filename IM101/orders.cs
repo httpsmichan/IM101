@@ -345,7 +345,7 @@ namespace IM101
             }
             else
             {
-                filteredData = proddata.SearchProducts(textBox1.Text.Trim()); 
+                filteredData = proddata.SearchAvailableProducts(textBox1.Text.Trim()); 
             }
 
             order_Gridview1.DataSource = filteredData;

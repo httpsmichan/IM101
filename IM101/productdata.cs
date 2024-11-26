@@ -150,6 +150,56 @@ namespace IM101
             return listData;
         }
 
+        public List<productdata> SearchAvailableProducts(string searchTerm)
+        {
+            List<productdata> listData = new List<productdata>();
 
+            using (SqlConnection connect = new SqlConnection(@"Data Source=SHINE;Initial Catalog=FuntilonDatabase;Integrated Security=True;Encrypt=True;TrustServerCertificate=True"))
+            {
+                try
+                {
+                    connect.Open();
+
+                    string selectData = @"
+                SELECT * 
+                FROM Product 
+                WHERE Status = @Status 
+                AND (
+                    CAST(ProductID AS VARCHAR) LIKE @search 
+                    OR ProductName LIKE @search 
+                    OR Category LIKE @search
+                )";
+
+                    using (SqlCommand cmd = new SqlCommand(selectData, connect))
+                    {
+                        cmd.Parameters.AddWithValue("@Status", "Available");
+                        cmd.Parameters.AddWithValue("@search", "%" + searchTerm + "%");
+
+                        SqlDataReader reader = cmd.ExecuteReader();
+
+                        while (reader.Read())
+                        {
+                            productdata proddata = new productdata
+                            {
+                                ProductID = reader["ProductID"] != DBNull.Value ? Convert.ToInt32(reader["ProductID"]) : 0,
+                                ProductName = reader["ProductName"] != DBNull.Value ? reader["ProductName"].ToString() : string.Empty,
+                                Category = reader["Category"] != DBNull.Value ? reader["Category"].ToString() : string.Empty,
+                                Price = reader["Price"] != DBNull.Value ? reader["Price"].ToString() : "0",
+                                Status = reader["Status"] != DBNull.Value ? reader["Status"].ToString() : "Unknown",
+                                Date = reader["Date"] != DBNull.Value ? Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd") : "N/A"
+                            };
+
+                            listData.Add(proddata);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error while searching available products: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+
+            return listData;
+        }
     }
 }

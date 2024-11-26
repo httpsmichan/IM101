@@ -103,13 +103,12 @@ namespace IM101
 
         private void supply_addbtn_Click(object sender, EventArgs e)
         {
+
             if (emptyFields())
             {
                 MessageBox.Show("Please fill out all the fields.");
                 return;
             }
-
-            string checkProductQuery = "SELECT COUNT(1) FROM Product WHERE ProductID = @ProductID";
 
             try
             {
@@ -118,6 +117,7 @@ namespace IM101
                     connect.Open();
                 }
 
+                string checkProductQuery = "SELECT COUNT(1) FROM Product WHERE ProductID = @ProductID";
                 using (SqlCommand checkCommand = new SqlCommand(checkProductQuery, connect))
                 {
                     checkCommand.Parameters.AddWithValue("@ProductID", supply_prodID.Text);
@@ -126,6 +126,19 @@ namespace IM101
                     if (productExists == 0)
                     {
                         MessageBox.Show("The ProductID does not exist in the Product table. Please add the product first.");
+                        return;
+                    }
+                }
+
+                string checkSupplierQuery = "SELECT COUNT(1) FROM Supplier WHERE SupplierID = @SupplierID";
+                using (SqlCommand checkCommand = new SqlCommand(checkSupplierQuery, connect))
+                {
+                    checkCommand.Parameters.AddWithValue("@SupplierID", supply_supplierID.Text);
+                    int supplierExists = (int)checkCommand.ExecuteScalar();
+
+                    if (supplierExists == 0)
+                    {
+                        MessageBox.Show("The SupplierID does not exist in the Supplier table. Please add the supplier first.");
                         return;
                     }
                 }
@@ -151,7 +164,6 @@ namespace IM101
 
                 string insertQuery = "INSERT INTO Supply (ProductID, ProductName, QtySupplied, UnitCost, TotalCost, SupplierID, Status, SupplyDate) " +
                                      "VALUES (@ProductID, @ProductName, @Quantity, @UnitCost, @TotalCost, @SupplierID, @Status, @Date)";
-
                 using (SqlCommand command = new SqlCommand(insertQuery, connect))
                 {
                     command.Parameters.AddWithValue("@ProductID", supply_prodID.Text);
@@ -170,7 +182,6 @@ namespace IM101
                 {
                     InsertLogEntry(connect, supply_prodID.Text, supply_qtys.Text, "Supply Received");
 
-                    // Insert new inventory row, even if inventory already exists
                     InsertInventory(connect, supply_prodID.Text, productName, unitCost, supply_qtys.Text);
                 }
 
@@ -201,7 +212,6 @@ namespace IM101
                     connection.Open();
                 }
 
-                // Insert a new inventory row every time, regardless of whether the product exists in Inventory.
                 string insertInventoryQuery = @"
             INSERT INTO Inventory (ProductID, ProductName, Price, Stocks, Amount, Date)
             VALUES (@ProductID, @ProductName, @Price, @Stocks, @Amount, @Date)";
@@ -211,7 +221,7 @@ namespace IM101
                     insertCommand.Parameters.AddWithValue("@ProductID", productID);
                     insertCommand.Parameters.AddWithValue("@ProductName", productName);
                     insertCommand.Parameters.AddWithValue("@Price", unitCost);
-                    insertCommand.Parameters.AddWithValue("@Stocks", Convert.ToInt32(quantitySupplied));  // Converts the supplied quantity to integer
+                    insertCommand.Parameters.AddWithValue("@Stocks", Convert.ToInt32(quantitySupplied));  
                     insertCommand.Parameters.AddWithValue("@Amount", "pcs");
                     insertCommand.Parameters.AddWithValue("@Date", DateTime.Today);
 
@@ -487,6 +497,62 @@ namespace IM101
             {
                 TextBox total_costTextBox = supply_totalcost; 
                 total_costTextBox.Text = "Invalid input";
+            }
+        }
+
+        private void supply_prodID_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                string productID = supply_prodID.Text.Trim();  
+
+                if (!string.IsNullOrEmpty(productID))
+                {
+                    try
+                    {
+                        if (connect.State != ConnectionState.Open)
+                        {
+                            connect.Open();
+                        }
+
+                        string query = "SELECT ProductName, Price FROM Product WHERE ProductID = @ProductID";
+                        using (SqlCommand command = new SqlCommand(query, connect))
+                        {
+                            command.Parameters.AddWithValue("@ProductID", productID);
+
+                            using (SqlDataReader reader = command.ExecuteReader())
+                            {
+                                if (reader.Read())
+                                {
+                                    supply_prodname.Text = reader["ProductName"].ToString();
+                                    supply_unitcost.Text = Convert.ToDouble(reader["Price"]).ToString("F2");  // Format as a decimal value
+                                }
+                                else
+                                {
+                                    MessageBox.Show("ProductID not found. Please check and try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("An error occurred while fetching the Product Name and Price: " + ex.Message);
+                    }
+                    finally
+                    {
+                        if (connect.State == ConnectionState.Open)
+                        {
+                            connect.Close();
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Please enter a valid ProductID.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
             }
         }
     }

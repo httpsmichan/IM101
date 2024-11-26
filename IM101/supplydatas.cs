@@ -86,11 +86,15 @@ namespace IM101
                     connect.Open();
 
                 string searchQuery = @"
-            SELECT SupplyID, SupplierID, ProductID, ProductName, QtySupplied, UnitCost, TotalCost, SupplyDate, Status 
-            FROM Supply 
-            WHERE ProductName LIKE @searchTerm OR ProductName LIKE @searchTerm";
-
-                using (SqlCommand cmd = new SqlCommand(searchQuery, connect))
+        SELECT SupplyID, SupplierID, ProductID, ProductName, QtySupplied, UnitCost, TotalCost, SupplyDate, Status 
+        FROM Supply 
+        WHERE CAST(SupplyID AS VARCHAR) LIKE @searchTerm 
+              OR CAST(SupplierID AS VARCHAR) LIKE @searchTerm 
+              OR CAST(ProductID AS VARCHAR) LIKE @searchTerm 
+              OR ProductName LIKE @searchTerm
+              OR CONVERT(VARCHAR, SupplyDate, 23) LIKE @searchTerm";
+        
+        using (SqlCommand cmd = new SqlCommand(searchQuery, connect))
                 {
                     cmd.Parameters.AddWithValue("@searchTerm", "%" + searchTerm + "%");
 
@@ -107,12 +111,9 @@ namespace IM101
                             QtySupplied = reader.IsDBNull(reader.GetOrdinal("QtySupplied")) ? 0 : reader.GetInt32(reader.GetOrdinal("QtySupplied")),
                             UnitCost = reader.IsDBNull(reader.GetOrdinal("UnitCost")) ? 0 : reader.GetDecimal(reader.GetOrdinal("UnitCost")),
                             TotalCost = reader.IsDBNull(reader.GetOrdinal("TotalCost")) ? 0 : reader.GetDecimal(reader.GetOrdinal("TotalCost")),
-
                             SupplyDate = reader.IsDBNull(reader.GetOrdinal("SupplyDate"))
-                                        ? string.Empty 
-                                        : reader.GetDateTime(reader.GetOrdinal("SupplyDate")).ToString("yyyy-MM-dd"), 
-
-
+                                        ? string.Empty
+                                        : reader.GetDateTime(reader.GetOrdinal("SupplyDate")).ToString("yyyy-MM-dd"),
                             Status = reader.IsDBNull(reader.GetOrdinal("Status")) ? string.Empty : reader.GetString(reader.GetOrdinal("Status")),
                         };
 
@@ -131,6 +132,5 @@ namespace IM101
 
             return listData;
         }
-
     }
 }
